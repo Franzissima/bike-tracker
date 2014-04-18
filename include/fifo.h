@@ -17,8 +17,8 @@
 #define FIFO_EMPTY 2
 
 typedef struct {
-  uint8_t read;
-  uint8_t write;
+  volatile uint8_t read;
+  volatile uint8_t write;
   uint8_t buffer[FIFO_SIZE + 1];
 } FIFO;
 

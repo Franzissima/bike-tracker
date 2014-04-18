@@ -21,8 +21,18 @@
 extern void uart_init(uint8_t uart_index, uint16_t uart_baud);
 
 /*
+ * Initialing UART for asynchronous use, controlled by interrupts
+ */
+extern void uart_async_init(uint8_t uart_index, uint16_t uart_baud);
+
+/*
  * Open stream to UART device for usage with stdio functions
  */
 extern FILE *uart_open_stream(uint8_t uart_index);
+
+/*
+ * Open stream to interrupt controlled UART device for usage with stdio functions
+ */
+extern FILE *uart_async_open_stream(uint8_t uart_index);
 
 #endif /* UART_H_ */

@@ -17,11 +17,13 @@
 int main()
 {
     buzzer_init();
-    uart_init(0, UART_BAUD_SELECT(9600, F_CPU));
-    FILE *stream0 = uart_open_stream(0);
+    uart_async_init(0, UART_BAUD_SELECT(9600, F_CPU));
+    FILE *stream0 = uart_async_open_stream(0);
 
     char buffer[256];
     char *line;
+
+    sei();
 
     while (1)
     {
