@@ -38,8 +38,10 @@ ISR(USART_RXC_vect) {
     fifo_write(&uart_input_queue0, byte);
 }
 
-ISR(USART_TXC_vect) {
-
+ISR(USART_UDRE_vect) {
+    uint8_t byte = 0;
+    fifo_read(&uart_output_queue0, &byte);
+    UDR = byte;
 }
 
 /*
@@ -49,7 +51,7 @@ int uart_send_char(char c, FILE *dummy)
 {
 	loop_until_bit_is_set(UCSRA, UDRE); // wait until ready
     UDR = c;                            // send character
-	return (0);
+	return 0;
 }
 
 /*
@@ -75,7 +77,19 @@ int uart_async_receive_char(FILE *dummy)
     return byte;
 }
 
+int uart_async_send_char(char c, FILE *dummy)
+{
+    ATOMIC_BLOCK(ATOMIC_FORCEON) {
+        if(uart_output_queue0.read == uart_output_queue0.write) {
+            // queue is empty, enable data ready interrupt
+            UCSRB |= (1 << UDRIE);
+        }
+        fifo_write(&uart_output_queue0, c);
+    }
+    return 0;
+}
+
 FILE *uart_async_open_stream(uint8_t uart_index) {
-    return fdevopen (uart_send_char, uart_async_receive_char);
+    return fdevopen (uart_async_send_char, uart_async_receive_char);
 }
 #endif
