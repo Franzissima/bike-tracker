@@ -42,6 +42,9 @@ ISR(USART_UDRE_vect) {
     uint8_t byte = 0;
     fifo_read(&uart_output_queue0, &byte);
     UDR = byte;
+    if (IS_FIFO_EMPTY(uart_output_queue0)) {
+        UCSRB &= ~(1 << UDRIE); // queue empty, disable interrupt
+    }
 }
 
 /*
@@ -70,7 +73,7 @@ FILE *uart_open_stream(uint8_t uart_index) {
 int uart_async_receive_char(FILE *dummy)
 {
     uint8_t byte = 0;
-    while(uart_input_queue0.read == uart_input_queue0.write) {}
+    while(IS_FIFO_EMPTY(uart_input_queue0)) {}
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
         fifo_read(&uart_input_queue0, &byte);
     }
@@ -79,8 +82,9 @@ int uart_async_receive_char(FILE *dummy)
 
 int uart_async_send_char(char c, FILE *dummy)
 {
+    while(IS_FIFO_FULL(uart_output_queue0)) {}
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        if(uart_output_queue0.read == uart_output_queue0.write) {
+        if(IS_FIFO_EMPTY(uart_output_queue0)) {
             // queue is empty, enable data ready interrupt
             UCSRB |= (1 << UDRIE);
         }
