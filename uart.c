@@ -26,9 +26,9 @@ void uart_init(uint8_t uart_index, uint16_t uart_baud) {
 	UCSRC = ( 1 << URSEL )|(1 << UCSZ1)|(1 << UCSZ0); // 8 bit and 1 stop bit
 }
 
-void uart_async_init(uint8_t uart_index, uint16_t uart_baud) {
-    fifo_clear(&uart_input_queue0);
-    fifo_clear(&uart_output_queue0);
+void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t input_buffer_size, uint8_t output_buffer_size) {
+    fifo_init(&uart_input_queue0, input_buffer_size);
+    fifo_init(&uart_output_queue0, output_buffer_size);
     uart_init(uart_index, uart_baud);
     UCSRB |= (1 << RXCIE );
 }

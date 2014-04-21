@@ -8,13 +8,15 @@
 #include <stdlib.h>
 #include "include/fifo.h"
 
-void fifo_clear(FIFO *fifo) {
+void fifo_init(FIFO *fifo, uint8_t size) {
     fifo->read = 0;
     fifo->write = 0;
+    fifo->size = size;
+    fifo->buffer = (uint8_t*)malloc(size);
 }
 
 uint8_t fifo_write(FIFO *fifo, uint8_t byte) {
-    uint8_t next = ((fifo->write + 1) & FIFO_BUFFER_MASK);
+    uint8_t next = ((fifo->write + 1) & fifo->size);
     if (fifo->read == next) {
         return FIFO_FULL;
     }
@@ -28,6 +30,6 @@ uint8_t fifo_read(FIFO *fifo, uint8_t *byte) {
         return FIFO_EMPTY;
     }
     *byte = fifo->buffer[fifo->read];
-    fifo->read = (fifo->read + 1) & FIFO_BUFFER_MASK;
+    fifo->read = (fifo->read + 1) & fifo->size;
     return FIFO_OK;
 }

@@ -17,7 +17,7 @@
 int main()
 {
     buzzer_init();
-    uart_async_init(0, UART_BAUD_SELECT(9600, F_CPU));
+    uart_async_init(0, UART_BAUD_SELECT(9600, F_CPU), 3, 7);
     FILE *stream0 = uart_async_open_stream(0);
 
     char buffer[256];

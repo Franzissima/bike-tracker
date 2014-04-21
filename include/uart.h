@@ -23,7 +23,7 @@ extern void uart_init(uint8_t uart_index, uint16_t uart_baud);
 /*
  * Initialing UART for asynchronous use, controlled by interrupts
  */
-extern void uart_async_init(uint8_t uart_index, uint16_t uart_baud);
+extern void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t input_buffer_size, uint8_t output_buffer_size);
 
 /*
  * Open stream to UART device for usage with stdio functions
