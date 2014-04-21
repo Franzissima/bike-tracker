@@ -33,6 +33,10 @@ void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t input_buffe
     UCSRB |= (1 << RXCIE );
 }
 
+FIFO *uart_get_async_input(uint8_t uart_index) {
+    return &uart_input_queue0;
+}
+
 ISR(USART_RXC_vect) {
     uint8_t byte = UDR;
     fifo_write(&uart_input_queue0, byte);
