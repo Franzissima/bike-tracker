@@ -27,6 +27,8 @@ extern void fifo_init(FIFO *fifo, uint8_t size);
 
 extern uint8_t fifo_write(FIFO *fifo, uint8_t byte);
 
+extern uint8_t fifo_write_bytes(FIFO *fifo, uint8_t bytes[], uint16_t length);
+
 extern uint8_t fifo_read(FIFO *fifo, uint8_t *byte);
 
 #endif /* FIFO_H_ */

@@ -25,6 +25,15 @@ uint8_t fifo_write(FIFO *fifo, uint8_t byte) {
     return FIFO_OK;
 }
 
+uint8_t fifo_write_bytes(FIFO *fifo, uint8_t bytes[], uint16_t length) {
+    for (int i = 0; i < length; ++i) {
+        if(fifo_write(fifo, bytes[i]) == FIFO_FULL) {
+            return i;
+        }
+    }
+    return length;
+}
+
 uint8_t fifo_read(FIFO *fifo, uint8_t *byte) {
     if (fifo->read == fifo->write) {
         return FIFO_EMPTY;
