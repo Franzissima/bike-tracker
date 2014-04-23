@@ -8,6 +8,12 @@
 #include "include/fbus.h"
 #include <util/atomic.h>
 
+uint8_t fbus_state = FBUS_STATE_NO_FRAME;
+
+uint16_t fbus_bytes_read = 0;
+
+FBUS_FRAME fbus_input_frame;
+
 inline uint8_t fbus_expect_value(uint8_t actual, uint8_t expected) {
     if (expected == actual) {
         fbus_state++;
@@ -15,6 +21,17 @@ inline uint8_t fbus_expect_value(uint8_t actual, uint8_t expected) {
         fbus_state = FBUS_STATE_FRAME_ERROR;
     }
     return fbus_state;
+}
+
+void fbus_input_clear() {
+    ATOMIC_BLOCK(ATOMIC_FORCEON) {
+        fbus_state = FBUS_STATE_NO_FRAME;
+        fbus_bytes_read = 0;
+        fbus_input_frame.data_pos = 0;
+        fbus_input_frame.data_size = 0;
+        fbus_input_frame.even_checksum = 0;
+        fbus_input_frame.odd_checksum = 0;
+    }
 }
 
 uint8_t fbus_read_frame(FIFO *input) {
@@ -29,19 +46,12 @@ uint8_t fbus_read_frame(FIFO *input) {
     }
     if ((fbus_bytes_read & 0x01) == 0) {
         // even byte
-        if (fbus_bytes_read == 0) {
-            fbus_input_frame.even_checksum = c;
-        } else {
-            fbus_input_frame.even_checksum ^= c;
-        }
-    } else if (fbus_state != FBUS_STATE_EVEN_CHK_READ) { // do not check even checksum
+        fbus_input_frame.even_checksum ^= c;
+    } else if (fbus_state != FBUS_STATE_PADDING_BYTE_READ) { // do not check even checksum
         // odd byte
-        if (fbus_bytes_read == 1) {
-            fbus_input_frame.odd_checksum = c;
-        } else {
-            fbus_input_frame.odd_checksum ^= c;
-        }
+        fbus_input_frame.odd_checksum ^= c;
     }
+    fbus_bytes_read++;
     switch (fbus_state) {
         case FBUS_STATE_NO_FRAME:
             return fbus_expect_value(c, FBUS_FRAME_ID);

@@ -27,6 +27,7 @@ typedef struct {
     uint8_t even_checksum;
 } FBUS_FRAME;
 
+// fbus frame parsing states
 #define FBUS_STATE_NO_FRAME 0
 #define FBUS_STATE_FRAME_ID_READ 1
 #define FBUS_STATE_DEST_ADR_READ 2
@@ -42,11 +43,13 @@ typedef struct {
 
 #define FBUS_STATE_FRAME_ERROR 255
 
-uint8_t fbus_state = FBUS_STATE_NO_FRAME;
+extern uint8_t fbus_state;
 
-uint16_t fbus_bytes_read = 0;
+extern uint16_t fbus_bytes_read;
 
-FBUS_FRAME fbus_input_frame;
+extern FBUS_FRAME fbus_input_frame;
+
+extern void fbus_input_clear();
 
 extern uint8_t fbus_read_frame(FIFO *input);
 
