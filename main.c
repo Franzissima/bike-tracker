@@ -197,7 +197,7 @@ int main()
 
     // test odd data size
 
-    uint8_t test_frame2[] = {0x1E, 0x0D, 0x00, 0x7F, 0x00, 0x03, 0xD2, 0x01, 0x10, 0x00, 0xC0, 0x7C};
+    uint8_t test_frame2[] = {0x1E, 0x0D, 0x00, 0x7F, 0x00, 0x03, 0xD2, 0x01, 0x10, 0x00, 0xDC, 0x70};
     fifo_write_bytes(&input, test_frame2, 12);
     fbus_input_clear();
     assertEqualsUint8(FBUS_STATE_FRAME_ID_READ, fbus_read_frame(&input), "Expected FBUS_STATE_FRAME_ID_READ");
@@ -217,6 +217,8 @@ int main()
     assertEqualsUint8(FBUS_STATE_PADDING_BYTE_READ, fbus_read_frame(&input), "Expected FBUS_STATE_PADDING_BYTE_READ");
     assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(&input), "Expected FBUS_STATE_EVEN_CHK_READ");
     assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(&input), "Expected FBUS_STATE_FRAME_READY");
+    assertEqualsUint8(0xDC, fbus_input_frame.even_checksum, "Expected 0xDC");
+    assertEqualsUint8(0x71, fbus_input_frame.odd_checksum, "Expected 0x71");
 
     fputs("Finished test odd data size\n\r", output);
 
