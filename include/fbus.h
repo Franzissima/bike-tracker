@@ -36,12 +36,15 @@ typedef struct {
 #define FBUS_STATE_SIZE_LSB_READ 6
 #define FBUS_STATE_DATA_READ 7
 #define FBUS_STATE_PADDING_BYTE_READ 8
-#define FBUS_STATE_ODD_CHK_READ 9
-#define FBUS_STATE_FRAME_READY 10
+#define FBUS_STATE_EVEN_CHK_READ 9
+#define FBUS_STATE_ODD_CHK_READ 10
+#define FBUS_STATE_FRAME_READY FBUS_STATE_ODD_CHK_READ
 
 #define FBUS_STATE_FRAME_ERROR 255
 
 uint8_t fbus_state = FBUS_STATE_NO_FRAME;
+
+uint16_t fbus_bytes_read = 0;
 
 FBUS_FRAME fbus_input_frame;
 

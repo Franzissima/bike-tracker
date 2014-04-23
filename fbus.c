@@ -27,6 +27,21 @@ uint8_t fbus_read_frame(FIFO *input) {
         }
         fifo_read(input, &c);
     }
+    if ((fbus_bytes_read & 0x01) == 0) {
+        // even byte
+        if (fbus_bytes_read == 0) {
+            fbus_input_frame.even_checksum = c;
+        } else {
+            fbus_input_frame.even_checksum ^= c;
+        }
+    } else if (fbus_state != FBUS_STATE_EVEN_CHK_READ) { // do not check even checksum
+        // odd byte
+        if (fbus_bytes_read == 1) {
+            fbus_input_frame.odd_checksum = c;
+        } else {
+            fbus_input_frame.odd_checksum ^= c;
+        }
+    }
     switch (fbus_state) {
         case FBUS_STATE_NO_FRAME:
             return fbus_expect_value(c, FBUS_FRAME_ID);
@@ -58,10 +73,16 @@ uint8_t fbus_read_frame(FIFO *input) {
         case FBUS_STATE_DATA_READ:
             return ++fbus_state; // skip padding byte
         case FBUS_STATE_PADDING_BYTE_READ:
-            fbus_input_frame.odd_checksum = c;
+            if (fbus_input_frame.even_checksum != c) {
+                fbus_state = FBUS_STATE_FRAME_ERROR;
+                return fbus_state;
+            }
             return ++fbus_state;
-        case FBUS_STATE_ODD_CHK_READ:
-            fbus_input_frame.even_checksum = c;
+        case FBUS_STATE_EVEN_CHK_READ:
+            if (fbus_input_frame.odd_checksum != c) {
+                fbus_state = FBUS_STATE_FRAME_ERROR;
+                return fbus_state;
+            }
             return ++fbus_state;
     }
     // this should never happen:
