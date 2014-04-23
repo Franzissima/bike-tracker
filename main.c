@@ -171,7 +171,7 @@ int main()
 
     // test even data size
 
-    uint8_t test_frame1[] = {0x1E, 0x0D, 0x00, 0x7F, 0x00, 0x02, 0xD2, 0x01, 0xC0, 0x7C};
+    uint8_t test_frame1[] = {0x1E, 0x0D, 0x00, 0x7F, 0x00, 0x02, 0xD2, 0x01, 0xCC, 0x71};
     fifo_write_bytes(&input, test_frame1, 10);
     fbus_input_clear();
     assertEqualsUint8(FBUS_STATE_NO_FRAME, fbus_state, "Expected FBUS_STATE_NO_FRAME");

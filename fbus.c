@@ -44,12 +44,14 @@ uint8_t fbus_read_frame(FIFO *input) {
         }
         fifo_read(input, &c);
     }
-    if ((fbus_bytes_read & 0x01) == 0) {
-        // even byte
-        fbus_input_frame.even_checksum ^= c;
-    } else if (fbus_state != FBUS_STATE_PADDING_BYTE_READ) { // do not check even checksum
-        // odd byte
-        fbus_input_frame.odd_checksum ^= c;
+    if (fbus_state < FBUS_STATE_PADDING_BYTE_READ) {
+        if ((fbus_bytes_read & 0x01) == 0) {
+            // even byte
+            fbus_input_frame.even_checksum ^= c;
+        } else {
+            // odd byte
+            fbus_input_frame.odd_checksum ^= c;
+        }
     }
     fbus_bytes_read++;
     switch (fbus_state) {
