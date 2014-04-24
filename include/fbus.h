@@ -14,7 +14,7 @@
 
 #define FBUS_FRAME_ID 0x1E
 #define FBUS_PHONE_ID 0x00
-#define FBUS_TERMINAL_ID 0x0D
+#define FBUS_TERMINAL_ID 0x0C
 
 #define FBUS_MAX_DATA_LENGTH 512
 
