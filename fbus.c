@@ -8,19 +8,23 @@
 #include "include/fbus.h"
 #include <util/atomic.h>
 
+#define FBUS_INIT_BYTE 0x55
+#define FBUS_INIT_COUNT 128
+
 uint8_t fbus_state = FBUS_STATE_NO_FRAME;
 
 uint16_t fbus_bytes_read = 0;
 
 FBUS_FRAME fbus_input_frame;
 
-inline uint8_t fbus_expect_value(uint8_t actual, uint8_t expected) {
-    if (expected == actual) {
-        fbus_state++;
-    } else {
-        fbus_state = FBUS_STATE_FRAME_ERROR;
+void fbus_init(FIFO *output) {
+    uint16_t count = FBUS_INIT_COUNT;
+    while (count > 0) {
+        while(IS_FIFO_FULL_P(output)) {} // wait for asynchronous transmission
+        ATOMIC_BLOCK(ATOMIC_FORCEON) {
+            count -= fifo_write_n_bytes(output, FBUS_INIT_BYTE, count);
+        }
     }
-    return fbus_state;
 }
 
 void fbus_input_clear() {
@@ -34,10 +38,19 @@ void fbus_input_clear() {
     }
 }
 
+inline uint8_t fbus_expect_value(uint8_t actual, uint8_t expected) {
+    if (expected == actual) {
+        fbus_state++;
+    } else {
+        fbus_state = FBUS_STATE_FRAME_ERROR;
+    }
+    return fbus_state;
+}
+
 uint8_t fbus_read_frame(FIFO *input) {
     uint8_t c = 0;
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        if (input->read == input->write
+        if (IS_FIFO_EMPTY_P(input)
                 || fbus_state == FBUS_STATE_FRAME_ERROR
                 || fbus_state == FBUS_STATE_FRAME_READY) {
             return fbus_state;

@@ -49,6 +49,8 @@ extern uint16_t fbus_bytes_read;
 
 extern FBUS_FRAME fbus_input_frame;
 
+extern void fbus_init(FIFO *output);
+
 extern void fbus_input_clear();
 
 extern uint8_t fbus_read_frame(FIFO *input);
