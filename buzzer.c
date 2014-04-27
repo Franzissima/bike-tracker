@@ -4,6 +4,7 @@
  *  Created on: 04.04.2014
  *      Author: andreasbehnke
  */
+#include "include/hardware.h"
 #include "include/buzzer.h"
 #include <avr/io.h>
 #include <util/atomic.h>
@@ -11,10 +12,6 @@
 
 #define BUZZER_PERIOD      4
 #define BUZZER_HALF_PERIOD 2
-#define BUZZER_PIN_1       (1<<PA0)
-#define BUZZER_PIN_2       (1<<PA1)
-#define BUZZER_DDR         DDRA
-#define BUZZER_PORT        PORTA
 
 volatile uint8_t buzzer_async_state;
 volatile uint8_t buzzer_beep_times_count;

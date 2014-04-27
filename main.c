@@ -58,8 +58,14 @@ int main() {
 
 #ifdef TEST_BUZZER
 int main() {
+#ifdef TCCR0
       TCCR0 = (1<<CS01);
       TIMSK |= (1<<TOIE0);
+#endif
+#ifdef TCCR0A
+      TCCR0B = (1<<CS01);
+      TIMSK0 |= (1<<TOIE0);
+#endif
 
       sei();
 
