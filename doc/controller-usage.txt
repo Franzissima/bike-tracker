@@ -1,0 +1,2 @@
+PA0, PA1       - Buzzer, either 00 for off, or frequence 10, 01
+PB0            - Board LED
