@@ -36,13 +36,29 @@ FIFO uart_input_queue0;
 FIFO uart_output_queue0;
 
 void uart_init(uint8_t uart_index, uint16_t uart_baud) {
-    UBRR0H = (uint8_t) (uart_baud>>8);
-    UBRR0L = (uint8_t) (uart_baud);
-	UCSR0B = (1<<RXEN0)|(1<<TXEN0);
+#ifdef UCSR1A
+    switch (uart_index) {
+        case 0:
+#endif
+            UBRR0H = (uint8_t) (uart_baud>>8);
+            UBRR0L = (uint8_t) (uart_baud);
+            UCSR0B = (1<<RXEN0)|(1<<TXEN0);
 #ifdef URSEL
-    UCSR0C = ( 1 << URSEL )|(1 << UCSZ01)|(1 << UCSZ00); // 8 bit and 1 stop bit
+            UCSR0C = ( 1 << URSEL )|(1 << UCSZ01)|(1 << UCSZ00); // 8 bit and 1 stop bit
 #else
-	UCSR0C = (1 << UCSZ01)|(1 << UCSZ00); // 8 bit and 1 stop bit
+            UCSR0C = (1 << UCSZ01)|(1 << UCSZ00); // 8 bit and 1 stop bit
+#endif
+#ifdef UCSR1A
+            break;
+        case 1:
+            UBRR1H = (uint8_t) (uart_baud>>8);
+            UBRR1L = (uint8_t) (uart_baud);
+            UCSR1B = (1<<RXEN1)|(1<<TXEN1);
+            UCSR1C = (1 << UCSZ11)|(1 << UCSZ10); // 8 bit and 1 stop bit
+            break;
+        default:
+            break;
+    }
 #endif
 }
 
