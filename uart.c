@@ -35,6 +35,11 @@
 FIFO uart_input_queue0;
 FIFO uart_output_queue0;
 
+#ifdef UCSR1A
+FIFO uart_input_queue1;
+FIFO uart_output_queue1;
+#endif
+
 void uart_init(uint8_t uart_index, uint16_t uart_baud) {
 #ifdef UCSR1A
     switch (uart_index) {
@@ -63,10 +68,26 @@ void uart_init(uint8_t uart_index, uint16_t uart_baud) {
 }
 
 void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t input_buffer_size, uint8_t output_buffer_size) {
-    fifo_init(&uart_input_queue0, input_buffer_size);
-    fifo_init(&uart_output_queue0, output_buffer_size);
-    uart_init(uart_index, uart_baud);
-    UCSR0B |= (1 << RXCIE0);
+#ifdef UCSR1A
+    switch (uart_index) {
+        case 0:
+#endif
+            fifo_init(&uart_input_queue0, input_buffer_size);
+            fifo_init(&uart_output_queue0, output_buffer_size);
+            uart_init(uart_index, uart_baud);
+            UCSR0B |= (1 << RXCIE0);
+#ifdef UCSR1A
+            break;
+        case 1:
+            fifo_init(&uart_input_queue1, input_buffer_size);
+            fifo_init(&uart_output_queue1, output_buffer_size);
+            uart_init(uart_index, uart_baud);
+            UCSR1B |= (1 << RXCIE1);
+            break;
+        default:
+            break;
+    }
+#endif
 }
 
 FIFO *uart_get_async_input(uint8_t uart_index) {
