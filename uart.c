@@ -9,9 +9,9 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
+#include "include/hardware.h"
 #include "include/fifo.h"
 #include "include/uart.h"
-#include "include/buzzer.h"
 
 #ifdef UCSRA
 #define UBRR0H UBRRH
@@ -32,13 +32,14 @@
 #define USART0_UDRE_vect USART_UDRE_vect
 #endif
 
-FIFO uart_input_queue0;
-FIFO uart_output_queue0;
-
 #ifdef UCSR1A
-FIFO uart_input_queue1;
-FIFO uart_output_queue1;
+#define UART_COUNT 2
+#elif defined UCSR0A
+#define UART_COUNT 1
 #endif
+
+FIFO uart_input_queue[UART_COUNT];
+FIFO uart_output_queue[UART_COUNT];
 
 void uart_init(uint8_t uart_index, uint16_t uart_baud) {
 #ifdef UCSR1A
@@ -68,20 +69,17 @@ void uart_init(uint8_t uart_index, uint16_t uart_baud) {
 }
 
 void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t input_buffer_size, uint8_t output_buffer_size) {
+    fifo_init(&uart_input_queue[uart_index], input_buffer_size);
+    fifo_init(&uart_output_queue[uart_index], output_buffer_size);
+    uart_init(uart_index, uart_baud);
 #ifdef UCSR1A
     switch (uart_index) {
         case 0:
 #endif
-            fifo_init(&uart_input_queue0, input_buffer_size);
-            fifo_init(&uart_output_queue0, output_buffer_size);
-            uart_init(uart_index, uart_baud);
             UCSR0B |= (1 << RXCIE0);
 #ifdef UCSR1A
             break;
         case 1:
-            fifo_init(&uart_input_queue1, input_buffer_size);
-            fifo_init(&uart_output_queue1, output_buffer_size);
-            uart_init(uart_index, uart_baud);
             UCSR1B |= (1 << RXCIE1);
             break;
         default:
@@ -91,30 +89,59 @@ void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t input_buffe
 }
 
 FIFO *uart_get_async_input(uint8_t uart_index) {
-    return &uart_input_queue0;
+    return &uart_output_queue[uart_index];
 }
 
 ISR(USART0_RX_vect) {
     uint8_t byte = UDR0;
-    fifo_write(&uart_input_queue0, byte);
+    fifo_write(&uart_output_queue[0], byte);
 }
 
 ISR(USART0_UDRE_vect) {
     uint8_t byte = 0;
-    fifo_read(&uart_output_queue0, &byte);
+    fifo_read(&uart_output_queue[0], &byte);
     UDR0 = byte;
-    if (IS_FIFO_EMPTY(uart_output_queue0)) {
+    if (IS_FIFO_EMPTY(uart_output_queue[0])) {
         UCSR0B &= ~(1 << UDRIE0); // queue empty, disable interrupt
     }
 }
+
+#ifdef UCSR1A
+ISR(USART1_RX_vect) {
+    uint8_t byte = UDR1;
+    fifo_write(&uart_output_queue[1], byte);
+}
+
+ISR(USART1_UDRE_vect) {
+    uint8_t byte = 0;
+    fifo_read(&uart_output_queue[1], &byte);
+    UDR0 = byte;
+    if (IS_FIFO_EMPTY(uart_output_queue[1])) {
+        UCSR1B &= ~(1 << UDRIE1); // queue empty, disable interrupt
+    }
+}
+#endif
 
 /*
  * Sends one character to UART
  */
 int uart_send_char(char c, FILE *dummy)
 {
-	loop_until_bit_is_set(UCSR0A, UDRE0); // wait until ready
-	UDR0 = c;                            // send character
+#ifdef UCSR1A
+    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    switch(*uart_index) {
+        case 0:
+#endif
+            loop_until_bit_is_set(UCSR0A, UDRE0);
+            UDR0 = c;
+#ifdef UCSR1A
+            break;
+        case 1:
+            loop_until_bit_is_set(UCSR1A, UDRE1);
+            UDR1 = c;
+            break;
+    }
+#endif
 	return 0;
 }
 
@@ -123,37 +150,70 @@ int uart_send_char(char c, FILE *dummy)
  */
 int uart_receive_char(FILE *dummy)
 {
-    while (!(UCSR0A & (1<<RXC0))) {}
-	return UDR0;
+#ifdef UCSR1A
+    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    switch(*uart_index) {
+        case 0:
+#endif
+            while (!(UCSR0A & (1<<RXC0))) {}
+            return UDR0;
+#ifdef UCSR1A
+        case 1:
+            while (!(UCSR1A & (1<<RXC1))) {}
+            return UDR1;
+    }
+    return EOF;
+#endif
 }
 
 FILE *uart_open_stream(uint8_t uart_index) {
-	return fdevopen (uart_send_char, uart_receive_char);
+	FILE *stream = fdevopen (uart_send_char, uart_receive_char);
+	stream->udata = &uart_index;
+	return stream;
 }
 
 int uart_async_receive_char(FILE *dummy)
 {
+    uint8_t *uart_index = (uint8_t*)dummy->udata;
     uint8_t byte = 0;
-    while(IS_FIFO_EMPTY(uart_input_queue0)) {}
+    FIFO queue = uart_input_queue[*uart_index];
+    while(IS_FIFO_EMPTY(queue)) {}
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        fifo_read(&uart_input_queue0, &byte);
+        fifo_read(&queue, &byte);
     }
     return byte;
 }
 
 int uart_async_send_char(char c, FILE *dummy)
 {
-    while(IS_FIFO_FULL(uart_output_queue0)) {}
+    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    FIFO queue = uart_output_queue[*uart_index];
+    while(IS_FIFO_FULL(queue)) {}
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        if(IS_FIFO_EMPTY(uart_output_queue0)) {
+        if(IS_FIFO_EMPTY(queue)) {
             // queue is empty, enable data ready interrupt
-            UCSR0B |= (1 << UDRIE0);
+#ifdef UCSR1A
+            switch (*uart_index) {
+                case 0:
+#endif
+                    UCSR0B |= (1 << UDRIE0);
+#ifdef UCSR1A
+                    break;
+                case 1:
+                    UCSR1B |= (1 << UDRIE1);
+                    break;
+                default:
+                    break;
+            }
+#endif
         }
-        fifo_write(&uart_output_queue0, c);
+        fifo_write(&queue, c);
     }
     return 0;
 }
 
 FILE *uart_async_open_stream(uint8_t uart_index) {
-    return fdevopen (uart_async_send_char, uart_async_receive_char);
+    FILE *stream = fdevopen (uart_async_send_char, uart_async_receive_char);
+    stream->udata = &uart_index;
+    return stream;
 }
