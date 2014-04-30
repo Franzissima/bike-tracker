@@ -22,7 +22,7 @@ typedef struct {
     uint8_t command;
     uint16_t data_size;
     uint16_t data_pos;
-    uint8_t data[FBUS_MAX_DATA_LENGTH];
+    uint8_t *data;
     uint8_t odd_checksum;
     uint8_t even_checksum;
 } FBUS_FRAME;
@@ -41,7 +41,9 @@ typedef struct {
 #define FBUS_STATE_ODD_CHK_READ 10
 #define FBUS_STATE_FRAME_READY FBUS_STATE_ODD_CHK_READ
 
-#define FBUS_STATE_INPUT_QUEUE_EMPTY 254
+#define FBUS_STATE_INPUT_QUEUE_EMPTY 127
+
+#define FBUS_STATE_DATA_OVERFLOW 254
 #define FBUS_STATE_FRAME_ERROR 255
 
 extern uint8_t fbus_state;

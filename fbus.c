@@ -7,6 +7,7 @@
 
 #include "include/fbus.h"
 #include <util/atomic.h>
+#include <stdlib.h>
 
 #define FBUS_INIT_BYTE 0x55
 #define FBUS_INIT_COUNT 128
@@ -15,9 +16,13 @@ uint8_t fbus_state = FBUS_STATE_NO_FRAME;
 
 uint16_t fbus_bytes_read = 0;
 
+uint8_t *fbus_data;
+
 FBUS_FRAME fbus_input_frame;
 
 void fbus_init(FIFO *output) {
+    fbus_data = (uint8_t*)malloc(FBUS_MAX_DATA_LENGTH);
+    fbus_input_frame.data = fbus_data;
     uint16_t count = FBUS_INIT_COUNT;
     while (count > 0) {
         while(IS_FIFO_FULL_P(output)) {} // wait for asynchronous transmission
