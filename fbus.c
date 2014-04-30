@@ -20,7 +20,10 @@ uint8_t *fbus_data;
 
 FBUS_FRAME fbus_input_frame;
 
-void fbus_init(FIFO *output) {
+FIFO *fbus_input;
+
+void fbus_init(FIFO *output, FIFO *input) {
+    fbus_input = input;
     fbus_data = (uint8_t*)malloc(FBUS_MAX_DATA_LENGTH);
     fbus_input_frame.data = fbus_data;
     uint16_t count = FBUS_INIT_COUNT;
@@ -53,7 +56,7 @@ inline uint8_t _fbus_expect_value(uint8_t actual, uint8_t expected) {
 }
 
 uint8_t fbus_read_frame(FIFO *input) {
-    if (fbus_state == FBUS_STATE_FRAME_ERROR || fbus_state == FBUS_STATE_FRAME_READY) {
+    if (IS_FBUS_ERROR() || IS_FBUS_READY()) {
         return fbus_state;
     }
     uint8_t c = 0;
@@ -118,4 +121,15 @@ uint8_t fbus_read_frame(FIFO *input) {
     }
     // this should never happen:
     return FBUS_STATE_FRAME_ERROR;
+}
+
+void fbus_async_timer() {
+    if (IS_FBUS_ERROR() || fbus_state == FBUS_STATE_FRAME_READY) {
+        return;
+    }
+    // process input queue
+    uint8_t state;
+    do {
+        state = fbus_read_frame(fbus_input);
+    } while (state != FBUS_STATE_INPUT_QUEUE_EMPTY && state != FBUS_STATE_FRAME_READY && !IS_FBUS_ERROR());
 }
