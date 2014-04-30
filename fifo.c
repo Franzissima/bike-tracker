@@ -6,6 +6,7 @@
  */
 
 #include <stdlib.h>
+#include <util/atomic.h>
 #include "include/fifo.h"
 
 void fifo_init(FIFO *fifo, uint8_t size) {
@@ -23,6 +24,15 @@ uint8_t fifo_write(FIFO *fifo, uint8_t byte) {
     fifo->buffer[fifo->write] = byte;
     fifo->write = next;
     return FIFO_OK;
+}
+
+uint8_t fifo_write_blocking(FIFO *fifo, uint8_t byte) {
+    while(IS_FIFO_FULL_P(fifo)) {}
+    uint8_t state;
+    ATOMIC_BLOCK(ATOMIC_FORCEON) {
+        state = fifo_write(fifo, byte);
+    }
+    return state;
 }
 
 uint8_t fifo_write_bytes(FIFO *fifo, uint8_t bytes[], uint16_t length) {
