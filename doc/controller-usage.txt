@@ -1,2 +1,9 @@
-PA0, PA1       - Buzzer, either 00 for off, or frequence 10, 01
-PB0            - Board LED
+Buzzer / LED
+
+PA0, PA1       - buzzer, either 00 for off, or frequence 10, 01
+PB0            - board LED
+
+RXD0            - phone UART TX - red cable
+TXD0            - phone UART RX - orange cable
+
+
