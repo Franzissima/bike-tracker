@@ -41,6 +41,7 @@ typedef struct {
 #define FBUS_STATE_ODD_CHK_READ 10
 #define FBUS_STATE_FRAME_READY FBUS_STATE_ODD_CHK_READ
 
+#define FBUS_STATE_INPUT_QUEUE_EMPTY 254
 #define FBUS_STATE_FRAME_ERROR 255
 
 extern uint8_t fbus_state;

@@ -48,12 +48,13 @@ inline uint8_t _fbus_expect_value(uint8_t actual, uint8_t expected) {
 }
 
 uint8_t fbus_read_frame(FIFO *input) {
+    if (fbus_state == FBUS_STATE_FRAME_ERROR || fbus_state == FBUS_STATE_FRAME_READY) {
+        return fbus_state;
+    }
     uint8_t c = 0;
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        if (IS_FIFO_EMPTY_P(input)
-                || fbus_state == FBUS_STATE_FRAME_ERROR
-                || fbus_state == FBUS_STATE_FRAME_READY) {
-            return fbus_state;
+        if (IS_FIFO_EMPTY_P(input)) {
+            return FBUS_STATE_INPUT_QUEUE_EMPTY;
         }
         fifo_read(input, &c);
     }
