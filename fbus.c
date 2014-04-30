@@ -38,7 +38,7 @@ void fbus_input_clear() {
     }
 }
 
-inline uint8_t fbus_expect_value(uint8_t actual, uint8_t expected) {
+inline uint8_t _fbus_expect_value(uint8_t actual, uint8_t expected) {
     if (expected == actual) {
         fbus_state++;
     } else {
@@ -69,11 +69,11 @@ uint8_t fbus_read_frame(FIFO *input) {
     fbus_bytes_read++;
     switch (fbus_state) {
         case FBUS_STATE_NO_FRAME:
-            return fbus_expect_value(c, FBUS_FRAME_ID);
+            return _fbus_expect_value(c, FBUS_FRAME_ID);
         case FBUS_STATE_FRAME_ID_READ:
-            return fbus_expect_value(c, FBUS_TERMINAL_ID);
+            return _fbus_expect_value(c, FBUS_TERMINAL_ID);
         case FBUS_STATE_DEST_ADR_READ:
-            return fbus_expect_value(c, FBUS_PHONE_ID);
+            return _fbus_expect_value(c, FBUS_PHONE_ID);
         case FBUS_STATE_SRC_ADR_READ:
             fbus_input_frame.command = c;
             return ++fbus_state;
