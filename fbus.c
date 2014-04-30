@@ -124,12 +124,12 @@ uint8_t fbus_read_frame(FIFO *input) {
 }
 
 void fbus_async_timer() {
-    if (IS_FBUS_ERROR() || fbus_state == FBUS_STATE_FRAME_READY) {
+    if (IS_FBUS_ERROR() || IS_FBUS_READY()) {
         return;
     }
     // process input queue
     uint8_t state;
     do {
         state = fbus_read_frame(fbus_input);
-    } while (state != FBUS_STATE_INPUT_QUEUE_EMPTY && state != FBUS_STATE_FRAME_READY && !IS_FBUS_ERROR());
+    } while (state != FBUS_STATE_INPUT_QUEUE_EMPTY && !IS_FBUS_READY() && !IS_FBUS_ERROR());
 }
