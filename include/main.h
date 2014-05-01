@@ -10,8 +10,8 @@
 
 //#define TEST_MOTION_SENSOR
 //#define TEST_UART
-#define TEST_BUZZER
+//#define TEST_BUZZER
 //#define TEST_DEBOUNCE
 //#define TEST_FIFO
-//#define TEST_FBUS
+#define TEST_FBUS
 #endif /* MAIN_H_ */

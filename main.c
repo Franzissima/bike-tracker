@@ -145,7 +145,7 @@ int main()
 #endif
 
 #ifdef TEST_FBUS
-FIFO input;
+FIFO io;
 FILE *output;
 
 void assertEqualsUint8(uint8_t expected, uint8_t actual, const char* message) {
@@ -173,58 +173,61 @@ int main()
     output = uart_open_stream(0);
     fputs("start tests\n\r", output);
 
-    fifo_init(&input, 255);
+    fifo_init(&io, 255);
 
     // test even data size
+    // Frame: 0x1E, 0x00, 0x0D, 0x7F, 0x00, 0x02, 0xD2, 0x01, 0xC1, 0x7C
 
-    uint8_t test_frame1[] = {0x1E, 0x0D, 0x00, 0x7F, 0x00, 0x02, 0xD2, 0x01, 0xCC, 0x70};
-    fifo_write_bytes(&input, test_frame1, 10);
+    uint8_t test_data[] = {0xD2, 0x01};
+    fbus_init(&io, &io);
+    fbus_send_frame(0x7F, 0x0002, test_data);
     fbus_input_clear();
     assertEqualsUint8(FBUS_STATE_NO_FRAME, fbus_state, "Expected FBUS_STATE_NO_FRAME");
-    assertEqualsUint8(FBUS_STATE_FRAME_ID_READ, fbus_read_frame(&input), "Expected FBUS_STATE_FRAME_ID_READ");
-    assertEqualsUint8(FBUS_STATE_DEST_ADR_READ, fbus_read_frame(&input), "Expected FBUS_STATE_DEST_ADR_READ");
-    assertEqualsUint8(FBUS_STATE_SRC_ADR_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SRC_ADR_READ");
-    assertEqualsUint8(FBUS_STATE_CMD_READ, fbus_read_frame(&input), "Expected FBUS_STATE_CMD_READ");
+    assertEqualsUint8(FBUS_STATE_FRAME_ID_READ, fbus_read_frame(), "Expected FBUS_STATE_FRAME_ID_READ");
+    assertEqualsUint8(FBUS_STATE_DEST_ADR_READ, fbus_read_frame(), "Expected FBUS_STATE_DEST_ADR_READ");
+    assertEqualsUint8(FBUS_STATE_SRC_ADR_READ, fbus_read_frame(), "Expected FBUS_STATE_SRC_ADR_READ");
+    assertEqualsUint8(FBUS_STATE_CMD_READ, fbus_read_frame(), "Expected FBUS_STATE_CMD_READ");
     assertEqualsUint8(0x7F, fbus_input_frame.command, "Expected 0x7F");
-    assertEqualsUint8(FBUS_STATE_SIZE_MSB_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SIZE_MSB_READ");
+    assertEqualsUint8(FBUS_STATE_SIZE_MSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_MSB_READ");
     assertEqualsUint16(0x0000, fbus_input_frame.data_size, "Expected 0x0000");
-    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SIZE_LSB_READ");
+    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_LSB_READ");
     assertEqualsUint16(0x0002, fbus_input_frame.data_size, "Expected 0x0002");
-    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SIZE_LSB_READ");
+    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_LSB_READ");
     assertEqualsUint8(0xD2, fbus_input_frame.data[0], "Expected 0xD2");
-    assertEqualsUint8(FBUS_STATE_PADDING_BYTE_READ, fbus_read_frame(&input), "Expected FBUS_STATE_PADDING_BYTE_READ");
+    assertEqualsUint8(FBUS_STATE_PADDING_BYTE_READ, fbus_read_frame(), "Expected FBUS_STATE_PADDING_BYTE_READ");
     assertEqualsUint8(0x01, fbus_input_frame.data[1], "Expected 0x01");
-    assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(&input), "Expected FBUS_STATE_EVEN_CHK_READ");
-    assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(&input), "Expected FBUS_STATE_FRAME_READY");
-    assertEqualsUint8(0xCC, fbus_input_frame.even_checksum, "Expected 0xCC");
-    assertEqualsUint8(0x71, fbus_input_frame.odd_checksum, "Expected 0x71");
+    assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(), "Expected FBUS_STATE_EVEN_CHK_READ");
+    assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(), "Expected FBUS_STATE_FRAME_READY");
+    assertEqualsUint8(0xC1, fbus_input_frame.even_checksum, "Expected 0xC1");
+    assertEqualsUint8(0x7C, fbus_input_frame.odd_checksum, "Expected 0x7C");
 
     fputs("Finished test even data size\n\r", output);
 
     // test odd data size
 
-    uint8_t test_frame2[] = {0x1E, 0x0D, 0x00, 0x7F, 0x00, 0x03, 0xD2, 0x01, 0x10, 0x00, 0xDC, 0x71};
-    fifo_write_bytes(&input, test_frame2, 12);
+    // Frame: 0x1E, 0x00, 0x0D, 0x7F, 0x00, 0x03, 0xD2, 0x01, 0x10, 0x00, 0xD1, 0x7D
+    uint8_t test_data[] = {0xD2, 0x01, 0x10};
+    fbus_send_frame(0x7F, 0x0003, test_data);
     fbus_input_clear();
-    assertEqualsUint8(FBUS_STATE_FRAME_ID_READ, fbus_read_frame(&input), "Expected FBUS_STATE_FRAME_ID_READ");
-    assertEqualsUint8(FBUS_STATE_DEST_ADR_READ, fbus_read_frame(&input), "Expected FBUS_STATE_DEST_ADR_READ");
-    assertEqualsUint8(FBUS_STATE_SRC_ADR_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SRC_ADR_READ");
-    assertEqualsUint8(FBUS_STATE_CMD_READ, fbus_read_frame(&input), "Expected FBUS_STATE_CMD_READ");
-    assertEqualsUint8(FBUS_STATE_SIZE_MSB_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SIZE_MSB_READ");
+    assertEqualsUint8(FBUS_STATE_FRAME_ID_READ, fbus_read_frame(), "Expected FBUS_STATE_FRAME_ID_READ");
+    assertEqualsUint8(FBUS_STATE_DEST_ADR_READ, fbus_read_frame(), "Expected FBUS_STATE_DEST_ADR_READ");
+    assertEqualsUint8(FBUS_STATE_SRC_ADR_READ, fbus_read_frame(), "Expected FBUS_STATE_SRC_ADR_READ");
+    assertEqualsUint8(FBUS_STATE_CMD_READ, fbus_read_frame(), "Expected FBUS_STATE_CMD_READ");
+    assertEqualsUint8(FBUS_STATE_SIZE_MSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_MSB_READ");
     assertEqualsUint16(0x0000, fbus_input_frame.data_size, "Expected 0x0000");
-    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SIZE_LSB_READ");
-    assertEqualsUint16(0x0003, fbus_input_frame.data_size, "Expected 0x0002");
-    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SIZE_LSB_READ");
+    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_LSB_READ");
+    assertEqualsUint16(0x0003, fbus_input_frame.data_size, "Expected 0x0003");
+    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_LSB_READ");
     assertEqualsUint8(0xD2, fbus_input_frame.data[0], "Expected 0xD2");
-    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(&input), "Expected FBUS_STATE_SIZE_LSB_READ");
+    assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_LSB_READ");
     assertEqualsUint8(0x01, fbus_input_frame.data[1], "Expected 0x01");
-    assertEqualsUint8(FBUS_STATE_DATA_READ, fbus_read_frame(&input), "Expected FBUS_STATE_DATA_READ");
+    assertEqualsUint8(FBUS_STATE_DATA_READ, fbus_read_frame(), "Expected FBUS_STATE_DATA_READ");
     assertEqualsUint8(0x10, fbus_input_frame.data[2], "Expected 0x10");
-    assertEqualsUint8(FBUS_STATE_PADDING_BYTE_READ, fbus_read_frame(&input), "Expected FBUS_STATE_PADDING_BYTE_READ");
-    assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(&input), "Expected FBUS_STATE_EVEN_CHK_READ");
-    assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(&input), "Expected FBUS_STATE_FRAME_READY");
-    assertEqualsUint8(0xDC, fbus_input_frame.even_checksum, "Expected 0xDC");
-    assertEqualsUint8(0x71, fbus_input_frame.odd_checksum, "Expected 0x71");
+    assertEqualsUint8(FBUS_STATE_PADDING_BYTE_READ, fbus_read_frame(), "Expected FBUS_STATE_PADDING_BYTE_READ");
+    assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(), "Expected FBUS_STATE_EVEN_CHK_READ");
+    assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(), "Expected FBUS_STATE_FRAME_READY");
+    assertEqualsUint8(0xD1, fbus_input_frame.even_checksum, "Expected 0xD1");
+    assertEqualsUint8(0x7D, fbus_input_frame.odd_checksum, "Expected 0x7D");
 
     fputs("Finished test odd data size\n\r", output);
 
