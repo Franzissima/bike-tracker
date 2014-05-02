@@ -176,7 +176,7 @@ int main()
     fifo_init(&io, 255);
 
     // test even data size
-    // Frame: 0x1E, 0x00, 0x0D, 0x7F, 0x00, 0x02, 0xD2, 0x01, 0xC1, 0x7C
+    // Frame: 0x1E, 0x00, 0x0C, 0x7F, 0x00, 0x02, 0xD2, 0x01, 0xC1, 0x7C
 
     uint8_t test_data[] = {0xD2, 0x01};
     fbus_init(&io, &io);
@@ -198,16 +198,16 @@ int main()
     assertEqualsUint8(0x01, fbus_input_frame.data[1], "Expected 0x01");
     assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(), "Expected FBUS_STATE_EVEN_CHK_READ");
     assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(), "Expected FBUS_STATE_FRAME_READY");
-    assertEqualsUint8(0xC1, fbus_input_frame.even_checksum, "Expected 0xC1");
+    assertEqualsUint8(0xC0, fbus_input_frame.even_checksum, "Expected 0xC0");
     assertEqualsUint8(0x7C, fbus_input_frame.odd_checksum, "Expected 0x7C");
 
     fputs("Finished test even data size\n\r", output);
 
     // test odd data size
 
-    // Frame: 0x1E, 0x00, 0x0D, 0x7F, 0x00, 0x03, 0xD2, 0x01, 0x10, 0x00, 0xD1, 0x7D
-    uint8_t test_data[] = {0xD2, 0x01, 0x10};
-    fbus_send_frame(0x7F, 0x0003, test_data);
+    // Frame: 0x1E, 0x00, 0x0C, 0x7F, 0x00, 0x03, 0xD2, 0x01, 0x10, 0x00, 0xD1, 0x7D
+    uint8_t test_data2[] = {0xD2, 0x01, 0x10};
+    fbus_send_frame(0x7F, 0x0003, test_data2);
     fbus_input_clear();
     assertEqualsUint8(FBUS_STATE_FRAME_ID_READ, fbus_read_frame(), "Expected FBUS_STATE_FRAME_ID_READ");
     assertEqualsUint8(FBUS_STATE_DEST_ADR_READ, fbus_read_frame(), "Expected FBUS_STATE_DEST_ADR_READ");
@@ -226,7 +226,7 @@ int main()
     assertEqualsUint8(FBUS_STATE_PADDING_BYTE_READ, fbus_read_frame(), "Expected FBUS_STATE_PADDING_BYTE_READ");
     assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(), "Expected FBUS_STATE_EVEN_CHK_READ");
     assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(), "Expected FBUS_STATE_FRAME_READY");
-    assertEqualsUint8(0xD1, fbus_input_frame.even_checksum, "Expected 0xD1");
+    assertEqualsUint8(0xD0, fbus_input_frame.even_checksum, "Expected 0xD0");
     assertEqualsUint8(0x7D, fbus_input_frame.odd_checksum, "Expected 0x7D");
 
     fputs("Finished test odd data size\n\r", output);
