@@ -169,8 +169,9 @@ int uart_receive_char(FILE *dummy)
 
 FILE *uart_open_stream(uint8_t uart_index) {
 	FILE *stream = fdevopen (uart_send_char, uart_receive_char);
-	stream->udata = &uart_index;
-	return stream;
+	stream->udata = malloc(sizeof(uint8_t));
+    *(uint8_t*)stream->udata = uart_index;
+    return stream;
 }
 
 int uart_async_receive_char(FILE *dummy)
