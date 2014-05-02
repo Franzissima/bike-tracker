@@ -15,8 +15,6 @@
 #define FIFO_EMPTY 2
 #define IS_FIFO_EMPTY(queue) queue.read == queue.write
 #define IS_FIFO_FULL(queue) queue.read == ((queue.write + 1) & queue.size)
-#define IS_FIFO_EMPTY_P(queue) queue->read == queue->write
-#define IS_FIFO_FULL_P(queue) queue->read == ((queue->write + 1) & queue->size)
 
 typedef struct {
   volatile uint8_t read;

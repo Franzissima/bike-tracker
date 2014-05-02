@@ -31,7 +31,7 @@ void fbus_init(FIFO *output, FIFO *input) {
     fbus_input_frame.data = fbus_data;
     uint16_t count = FBUS_INIT_COUNT;
     while (count > 0) {
-        while(IS_FIFO_FULL_P(output)) {} // wait for asynchronous transmission
+        while(IS_FIFO_FULL((*output))) {} // wait for asynchronous transmission
         ATOMIC_BLOCK(ATOMIC_FORCEON) {
             count -= fifo_write_n_bytes(output, FBUS_INIT_BYTE, count);
         }
@@ -64,7 +64,7 @@ uint8_t fbus_read_frame() {
     }
     uint8_t c = 0;
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        if (IS_FIFO_EMPTY_P(fbus_input)) {
+        if (IS_FIFO_EMPTY((*fbus_input))) {
             return FBUS_STATE_INPUT_QUEUE_EMPTY;
         }
         fifo_read(fbus_input, &c);

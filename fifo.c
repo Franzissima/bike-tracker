@@ -27,7 +27,7 @@ uint8_t fifo_write(FIFO *fifo, uint8_t byte) {
 }
 
 uint8_t fifo_write_blocking(FIFO *fifo, uint8_t byte) {
-    while(IS_FIFO_FULL_P(fifo)) {}
+    while(IS_FIFO_FULL((*fifo))) {}
     uint8_t state;
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
         state = fifo_write(fifo, byte);
