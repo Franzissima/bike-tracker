@@ -6,6 +6,7 @@
  *  Created on: 26.03.2014
  *      Author: andreasbehnke
  */
+#include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
@@ -176,10 +177,10 @@ int uart_async_receive_char(FILE *dummy)
 {
     uint8_t *uart_index = (uint8_t*)dummy->udata;
     uint8_t byte = 0;
-    FIFO queue = uart_input_queue[*uart_index];
-    while(IS_FIFO_EMPTY(queue)) {}
+    FIFO *queue = &uart_input_queue[*uart_index];
+    while(IS_FIFO_EMPTY((*queue))) {}
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        fifo_read(&queue, &byte);
+        fifo_read(queue, &byte);
     }
     return byte;
 }
@@ -187,10 +188,10 @@ int uart_async_receive_char(FILE *dummy)
 int uart_async_send_char(char c, FILE *dummy)
 {
     uint8_t *uart_index = (uint8_t*)dummy->udata;
-    FIFO queue = uart_output_queue[*uart_index];
-    while(IS_FIFO_FULL(queue)) {}
+    FIFO *queue = &uart_output_queue[*uart_index];
+    while(IS_FIFO_FULL((*queue))) {}
     ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        if(IS_FIFO_EMPTY(queue)) {
+        if(IS_FIFO_EMPTY((*queue))) {
             // queue is empty, enable data ready interrupt
 #ifdef UCSR1A
             switch (*uart_index) {
@@ -207,13 +208,14 @@ int uart_async_send_char(char c, FILE *dummy)
             }
 #endif
         }
-        fifo_write(&queue, c);
+        fifo_write(queue, c);
     }
     return 0;
 }
 
 FILE *uart_async_open_stream(uint8_t uart_index) {
     FILE *stream = fdevopen (uart_async_send_char, uart_async_receive_char);
-    stream->udata = &uart_index;
+    stream->udata = malloc(sizeof(uint8_t));
+    *(uint8_t*)stream->udata = uart_index;
     return stream;
 }
