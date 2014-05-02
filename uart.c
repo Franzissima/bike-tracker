@@ -89,12 +89,12 @@ void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t input_buffe
 }
 
 FIFO *uart_get_async_input(uint8_t uart_index) {
-    return &uart_output_queue[uart_index];
+    return &uart_input_queue[uart_index];
 }
 
 ISR(USART0_RX_vect) {
     uint8_t byte = UDR0;
-    fifo_write(&uart_output_queue[0], byte);
+    fifo_write(&uart_input_queue[0], byte);
 }
 
 ISR(USART0_UDRE_vect) {
@@ -109,7 +109,7 @@ ISR(USART0_UDRE_vect) {
 #ifdef UCSR1A
 ISR(USART1_RX_vect) {
     uint8_t byte = UDR1;
-    fifo_write(&uart_output_queue[1], byte);
+    fifo_write(&uart_input_queue[1], byte);
 }
 
 ISR(USART1_UDRE_vect) {
