@@ -116,7 +116,7 @@ ISR(USART1_RX_vect) {
 ISR(USART1_UDRE_vect) {
     uint8_t byte = 0;
     fifo_read(&uart_output_queue[1], &byte);
-    UDR0 = byte;
+    UDR1 = byte;
     if (IS_FIFO_EMPTY(uart_output_queue[1])) {
         UCSR1B &= ~(1 << UDRIE1); // queue empty, disable interrupt
     }
