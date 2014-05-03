@@ -14,13 +14,14 @@
 #include "include/motion_detection.h"
 #include "include/fifo.h"
 #include "include/fbus.h"
+#include "include/led.h"
 
 #ifdef TEST_UART
 int main()
 {
     buzzer_init();
-    uart_async_init(0, UART_BAUD_SELECT(9600, F_CPU), 3, 7);
-    FILE *stream0 = uart_async_open_stream(0);
+    uart_async_init(1, UART_BAUD_SELECT(9600, F_CPU), 3, 7);
+    FILE *stream0 = uart_async_open_stream(1);
 
     char buffer[256];
     char *line;
@@ -237,4 +238,16 @@ int main()
     return (1); // should never happen
 }
 
+#endif
+
+#ifdef TEST_LED
+int main() {
+    led_init();
+    while(1) {
+        led_on();
+        _delay_ms(200);
+        led_off();
+        _delay_ms(800);
+    }
+}
 #endif
