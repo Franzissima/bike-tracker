@@ -20,4 +20,10 @@
 #define LED_DDR            DDRB
 #define LED_PORT           PORTB
 
+/* phone */
+#define PHONE_UART         0
+#define PHONE_BAUD         UART_BAUD_SELECT(115200, F_CPU)
+#define PHONE_IN_BUF_SIZE  0xFF
+#define PHONE_OUT_BUF_SIZE 0xFF
+
 #endif /* HARDWARE_H_ */

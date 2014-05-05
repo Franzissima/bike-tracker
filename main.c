@@ -15,6 +15,7 @@
 #include "include/fifo.h"
 #include "include/fbus.h"
 #include "include/led.h"
+#include "include/phone.h"
 
 #ifdef TEST_UART
 int main()
@@ -42,6 +43,28 @@ int main()
         fputs("\n\r", stream0);
     }
     return (1);	// should never happen
+}
+#endif
+
+#ifdef TEST_UART_TO_UART
+int main()
+{
+    buzzer_init();
+    uart_async_init(0, UART_BAUD_SELECT(115200, F_CPU), 31, 31);
+    FILE *stream0 = uart_async_open_stream(0);
+    uart_async_init(1, UART_BAUD_SELECT(9600, F_CPU), 255, 255);
+    FILE *stream1 = uart_async_open_stream(1);
+
+    sei();
+
+    while (1)
+    {
+        fputs("Type a char:\n\r", stream0);
+        int c = fgetc(stream0);
+        buzzer_beep(1, 50, 0);
+        fputc(c, stream1);
+    }
+    return (1); // should never happen
 }
 #endif
 
@@ -249,5 +272,20 @@ int main() {
         led_off();
         _delay_ms(800);
     }
+}
+#endif
+
+#ifdef TEST_PHONE
+
+FILE *debug;
+
+int main() {
+    phone_init();
+    uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 63, 63);
+    debug = uart_async_open_stream(1);
+    sei();
+    while (phone_process(debug) != PHONE_STATE_ON) {}
+    fputs("Phone is on!", debug);
+    while(1) {}
 }
 #endif

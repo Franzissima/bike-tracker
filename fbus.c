@@ -9,7 +9,7 @@
 #include <util/atomic.h>
 #include <stdlib.h>
 
-volatile uint8_t fbus_state = FBUS_STATE_NO_FRAME;
+uint8_t fbus_state = FBUS_STATE_NO_FRAME;
 
 uint16_t fbus_bytes_read = 0;
 
@@ -111,17 +111,6 @@ uint8_t fbus_read_frame() {
     }
     // this should never happen:
     return FBUS_STATE_FRAME_ERROR;
-}
-
-void fbus_async_timer() {
-    if (IS_FBUS_ERROR() || IS_FBUS_READY()) {
-        return;
-    }
-    // process input queue
-    uint8_t state;
-    do {
-        state = fbus_read_frame();
-    } while (state != FBUS_STATE_INPUT_QUEUE_EMPTY && !IS_FBUS_READY() && !IS_FBUS_ERROR());
 }
 
 void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {

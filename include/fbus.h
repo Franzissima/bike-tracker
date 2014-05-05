@@ -48,8 +48,6 @@ typedef struct {
 #define IS_FBUS_ERROR() ((fbus_state & (1 << 8)) > 0)
 #define IS_FBUS_READY() (fbus_state == FBUS_STATE_FRAME_READY)
 
-volatile extern uint8_t fbus_state;
-
 extern uint16_t fbus_bytes_read;
 
 extern FBUS_FRAME fbus_input_frame;
@@ -59,8 +57,6 @@ extern void fbus_init(FIFO *output, FIFO *input);
 extern void fbus_input_clear();
 
 extern uint8_t fbus_read_frame();
-
-extern void fbus_async_timer();
 
 extern void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data);
 
