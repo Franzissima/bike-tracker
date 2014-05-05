@@ -9,7 +9,6 @@
 #define FBUS_H_
 
 #include <inttypes.h>
-#include <stdio.h>
 #include "fifo.h"
 
 #define FBUS_FRAME_ID 0x1E
@@ -46,7 +45,7 @@ typedef struct {
 #define FBUS_STATE_DATA_OVERFLOW 254
 #define FBUS_STATE_FRAME_ERROR 255
 
-#define IS_FBUS_ERROR() (fbus_state & (1 << 8))
+#define IS_FBUS_ERROR() ((fbus_state & (1 << 8)) > 0)
 #define IS_FBUS_READY() (fbus_state == FBUS_STATE_FRAME_READY)
 
 volatile extern uint8_t fbus_state;
