@@ -180,7 +180,7 @@ int uart_async_receive_char(FILE *dummy)
     uint8_t byte = 0;
     FIFO *queue = &uart_input_queue[*uart_index];
     while(IS_FIFO_EMPTY((*queue))) {}
-    ATOMIC_BLOCK(ATOMIC_FORCEON) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         fifo_read(queue, &byte);
     }
     return byte;
@@ -191,7 +191,7 @@ int uart_async_send_char(char c, FILE *dummy)
     uint8_t *uart_index = (uint8_t*)dummy->udata;
     FIFO *queue = &uart_output_queue[*uart_index];
     while(IS_FIFO_FULL((*queue))) {}
-    ATOMIC_BLOCK(ATOMIC_FORCEON) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         if(IS_FIFO_EMPTY((*queue))) {
             // queue is empty, enable data ready interrupt
 #ifdef UCSR1A

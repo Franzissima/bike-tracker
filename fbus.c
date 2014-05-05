@@ -26,7 +26,7 @@ void fbus_init(FIFO *output, FIFO *input) {
 }
 
 void fbus_input_clear() {
-    ATOMIC_BLOCK(ATOMIC_FORCEON) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         fbus_state = FBUS_STATE_NO_FRAME;
         fbus_bytes_read = 0;
         fbus_input_frame.data_pos = 0;
@@ -50,7 +50,7 @@ uint8_t fbus_read_frame() {
         return fbus_state;
     }
     uint8_t c = 0;
-    ATOMIC_BLOCK(ATOMIC_FORCEON) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         if (IS_FIFO_EMPTY((*fbus_input))) {
             return FBUS_STATE_INPUT_QUEUE_EMPTY;
         }
