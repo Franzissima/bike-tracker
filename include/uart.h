@@ -32,6 +32,11 @@ extern void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t inpu
 extern FIFO *uart_get_async_input_fifo(uint8_t uart_index);
 
 /*
+ * Get the fifo used for asynchronous data transmission
+ */
+extern FIFO *uart_get_async_output_fifo(uint8_t uart_index);
+
+/*
  * Open stream to UART device for usage with stdio functions
  */
 extern FILE *uart_open_stream(uint8_t uart_index);

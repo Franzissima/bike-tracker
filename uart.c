@@ -89,8 +89,12 @@ void uart_async_init(uint8_t uart_index, uint16_t uart_baud, uint8_t input_buffe
 #endif
 }
 
-FIFO *uart_get_async_input(uint8_t uart_index) {
+inline FIFO *uart_get_async_input_fifo(uint8_t uart_index) {
     return &uart_input_queue[uart_index];
+}
+
+inline FIFO *uart_get_async_output_fifo(uint8_t uart_index) {
+    return &uart_output_queue[uart_index];
 }
 
 ISR(USART0_RX_vect) {
