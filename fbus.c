@@ -124,7 +124,7 @@ void inline fbus_reset_sequence() {
 void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
     // set sequence number
     data[data_size - 1] = fbus_sequence;
-    fbus_sequence++;
+    fbus_sequence = (fbus_sequence + 1) & 0x0F;
 
     // write headerdata_size
     fifo_write_blocking(fbus_output, FBUS_FRAME_ID);
