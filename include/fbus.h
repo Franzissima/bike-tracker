@@ -58,6 +58,11 @@ extern void fbus_input_clear();
 
 extern uint8_t fbus_read_frame();
 
+extern void fbus_reset_sequence();
+
+/*
+ * Send fbus frame. The data must not contain seqeunce number, this number is calculated.
+ */
 extern void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data);
 
 #endif /* FBUS_H_ */

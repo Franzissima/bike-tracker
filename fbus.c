@@ -9,6 +9,10 @@
 #include <util/atomic.h>
 #include <stdlib.h>
 
+#define FBUS_START_SEQUENCE 0x60
+
+uint8_t fbus_sequence = FBUS_START_SEQUENCE;
+
 uint8_t fbus_state = FBUS_STATE_NO_FRAME;
 
 uint16_t fbus_bytes_read = 0;
@@ -113,7 +117,15 @@ uint8_t fbus_read_frame() {
     return FBUS_STATE_FRAME_ERROR;
 }
 
+void inline fbus_reset_sequence() {
+    fbus_sequence = FBUS_START_SEQUENCE;
+}
+
 void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
+    // set sequence number
+    data[data_size - 1] = fbus_sequence;
+    fbus_sequence++;
+
     // write headerdata_size
     fifo_write_blocking(fbus_output, FBUS_FRAME_ID);
     fifo_write_blocking(fbus_output, FBUS_PHONE_ID);
