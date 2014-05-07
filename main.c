@@ -284,8 +284,9 @@ int main() {
     uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 63, 63);
     debug = uart_async_open_stream(1);
     sei();
-    while (phone_process(debug) != PHONE_STATE_ON) {}
+    while (phone_process(debug) != PHONE_STATE_READY) {}
     fputs("Phone is on!", debug);
+    fputs("\n\r", debug);
     while(1) {}
 }
 #endif
