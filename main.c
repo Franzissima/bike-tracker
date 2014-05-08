@@ -168,6 +168,62 @@ int main()
 }
 #endif
 
+#ifdef TEST_FIFO_STREAM
+
+FIFO io;
+
+int main()
+{
+    uart_init(1, UART_BAUD_SELECT(9600, F_CPU));
+    FILE *output = uart_open_stream(1);
+    fifo_init(&io, 7);
+
+    FILE *fifo_stream = fifo_open_stream(&io, &io);
+
+    if (fgetc(fifo_stream) != EOF) {
+        fputs("Expected EOF, FIFO is empty", output);
+    }
+    if (fgetc(fifo_stream) != EOF) {
+        fputs("Expected EOF, FIFO is empty", output);
+    }
+    fputs("123456", fifo_stream);
+    if (fputc('7', fifo_stream) != 'c') {
+        fputs("Expected char 'c', FIFO is not full", output);
+    }
+    if (fputc('8', fifo_stream) != EOF) {
+        fputs("Expected EOF because queue is full", output);
+    }
+    if (fgetc(fifo_stream) != '1') {
+        fputs("Expected 1", output);
+    }
+    if (fgetc(fifo_stream) != '2') {
+        fputs("Expected 2", output);
+    }
+    if (fgetc(fifo_stream) != '3') {
+        fputs("Expected 3", output);
+    }
+    if (fgetc(fifo_stream) != '4') {
+        fputs("Expected 4", output);
+    }
+    if (fgetc(fifo_stream) != '5') {
+        fputs("Expected 5", output);
+    }
+    if (fgetc(fifo_stream) != '6') {
+        fputs("Expected 6", output);
+    }
+    if (fgetc(fifo_stream) != '7') {
+        fputs("Expected 8", output);
+    }
+    if (fgetc(fifo_stream) != EOF) {
+        fputs("Expected EOF, FIFO is empty", output);
+    }
+
+    fputs("FIFO Test finished", output);
+    while(1) {}
+    return (1); // should never happen
+}
+#endif
+
 #ifdef TEST_FBUS
 FIFO io;
 FILE *output;
@@ -281,12 +337,24 @@ FILE *debug;
 
 int main() {
     phone_init();
-    uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 63, 63);
-    debug = uart_async_open_stream(1);
+    //uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 63, 63);
+    //debug = uart_async_open_stream(1);
     sei();
-    while (phone_process(debug) != PHONE_STATE_READY) {}
-    fputs("Phone is on!", debug);
+
+    //while (phone_process(debug) != PHONE_STATE_READY) {}
+    //fputs("Phone is on!", debug);
+    //fputs("\n\r", debug);
+
+    //_delay_ms(10000);
+    fputs("Sending receive hardware version request!", debug);
     fputs("\n\r", debug);
+
+    phone_send_get_version();
+    //while (phone_process(debug) != PHONE_STATE_READY) {}
+    //fputs("Received hardware version:!", debug);
+    //fputs("\n\r", debug);
+    //fprintf(debug, "%s", fbus_input_frame.data);
+
     while(1) {}
 }
 #endif

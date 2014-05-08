@@ -9,6 +9,7 @@
 #define FIFO_H_
 
 #include <inttypes.h>
+#include <stdio.h>
 
 #define FIFO_OK 0
 #define FIFO_FULL 1
@@ -34,5 +35,7 @@ extern uint8_t fifo_write_bytes(FIFO *fifo, uint8_t bytes[], uint16_t length);
 extern uint8_t fifo_write_n_bytes(FIFO *fifo, uint8_t byte, uint16_t length);
 
 extern uint8_t fifo_read(FIFO *fifo, uint8_t *byte);
+
+extern FILE *fifo_open_stream(FIFO *input, FIFO *output);
 
 #endif /* FIFO_H_ */

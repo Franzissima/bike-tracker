@@ -14,7 +14,8 @@
 //#define TEST_BUZZER
 //#define TEST_DEBOUNCE
 //#define TEST_FIFO
+#define TEST_FIFO_STREAM
 //#define TEST_FBUS
 //#define TEST_LED
-#define TEST_PHONE
+//#define TEST_PHONE
 #endif /* MAIN_H_ */
