@@ -8,6 +8,7 @@
 #include "include/fbus.h"
 #include <util/atomic.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define FBUS_START_SEQUENCE 0x60
 
@@ -19,25 +20,20 @@ uint16_t fbus_bytes_read = 0;
 
 FBUS_FRAME fbus_input_frame;
 
-FIFO *fbus_input;
+FILE *fbus_stream;
 
-FIFO *fbus_output;
-
-void fbus_init(FIFO *output, FIFO *input) {
-    fbus_input = input;
-    fbus_output = output;
+void fbus_init(FILE *stream) {
+    fbus_stream = stream;
     fbus_input_frame.data = (uint8_t*)malloc(FBUS_MAX_DATA_LENGTH);
 }
 
 void fbus_input_clear() {
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-        fbus_state = FBUS_STATE_NO_FRAME;
-        fbus_bytes_read = 0;
-        fbus_input_frame.data_pos = 0;
-        fbus_input_frame.data_size = 0;
-        fbus_input_frame.even_checksum = 0;
-        fbus_input_frame.odd_checksum = 0;
-    }
+    fbus_state = FBUS_STATE_NO_FRAME;
+    fbus_bytes_read = 0;
+    fbus_input_frame.data_pos = 0;
+    fbus_input_frame.data_size = 0;
+    fbus_input_frame.even_checksum = 0;
+    fbus_input_frame.odd_checksum = 0;
 }
 
 inline uint8_t _fbus_expect_value(uint8_t actual, uint8_t expected) {
@@ -53,13 +49,11 @@ uint8_t fbus_read_frame() {
     if (IS_FBUS_ERROR() || IS_FBUS_READY()) {
         return fbus_state;
     }
-    uint8_t c = 0;
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-        if (IS_FIFO_EMPTY((*fbus_input))) {
-            return FBUS_STATE_INPUT_QUEUE_EMPTY;
-        }
-        fifo_read(fbus_input, &c);
+    int input = fgetc(fbus_stream);
+    if (input == EOF) {
+        return FBUS_STATE_INPUT_QUEUE_EMPTY;
     }
+    uint8_t c = input;
     if (fbus_state < FBUS_STATE_PADDING_BYTE_READ) {
         if ((fbus_bytes_read & 0x01) == 0) {
             // even byte
@@ -126,11 +120,11 @@ void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
     data[data_size - 1] = fbus_sequence;
     fbus_sequence = (fbus_sequence + 1) & 0x0F;
 
-    // write headerdata_size
-    fifo_write_blocking(fbus_output, FBUS_FRAME_ID);
-    fifo_write_blocking(fbus_output, FBUS_PHONE_ID);
-    fifo_write_blocking(fbus_output, FBUS_TERMINAL_ID);
-    fifo_write_blocking(fbus_output, command);
+    // write header
+    fputc(FBUS_FRAME_ID, fbus_stream);
+    fputc(FBUS_PHONE_ID, fbus_stream);
+    fputc(FBUS_TERMINAL_ID, fbus_stream);
+    fputc(command, fbus_stream);
 
     // initialize checksums
     uint8_t even_checksum = FBUS_FRAME_ID ^ FBUS_TERMINAL_ID;
@@ -141,13 +135,13 @@ void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
     even_checksum ^= msb_size;
     uint8_t lsb_size = (data_size & 0xFF);
     odd_checksum ^= lsb_size;
-    fifo_write_blocking(fbus_output, msb_size);
-    fifo_write_blocking(fbus_output, lsb_size);
+    fputc(msb_size, fbus_stream);
+    fputc(lsb_size, fbus_stream);
 
     // write data
     for(int i=0; i < data_size; i++) {
         uint8_t c = data[i];
-        fifo_write_blocking(fbus_output, c);
+        fputc(c, fbus_stream);
         if ((i & 0x01) == 0) {
             even_checksum ^= c;
         } else {
@@ -157,10 +151,10 @@ void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
 
     // write padding byte
     if ((data_size & 0x01) == 1) {
-        fifo_write_blocking(fbus_output, 0x00);
+        fputc(0x00, fbus_stream);
     }
 
     // write checksums
-    fifo_write_blocking(fbus_output, even_checksum);
-    fifo_write_blocking(fbus_output, odd_checksum);
+    fputc(even_checksum, fbus_stream);
+    fputc(odd_checksum, fbus_stream);
 }

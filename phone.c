@@ -18,19 +18,13 @@ uint8_t COMMAND_GET_HARDWARE_VERSION_DATA[] = {0x00, 0x01, 0x00, 0x03, 0x00, 0x0
 
 volatile uint8_t phone_state = PHONE_STATE_OFF;
 
-uint8_t phone_command_transived;
+uint8_t phone_command_transmission;
 uint8_t phone_command_receive;
-
-FIFO *phone_in;
-
-FIFO *phone_out;
 
 void phone_init() {
     // initialize UART
     uart_async_init(PHONE_UART, PHONE_BAUD, PHONE_IN_BUF_SIZE, PHONE_OUT_BUF_SIZE);
-    FIFO *phone_in = uart_get_async_input_fifo(PHONE_UART);
-	FIFO *phone_out = uart_get_async_output_fifo(PHONE_UART);
-	fbus_init(phone_out, phone_in);
+    fbus_init(uart_open_stream(PHONE_UART));
 	fbus_input_clear();
 
 	// TODO: turn phone on
@@ -58,20 +52,27 @@ uint8_t _phone_process_state(FILE *debug) {
              Example acknowledge command send by phone:
              1E 0C 00 7F 00 02 D1 00 CF 71
              */
-            if (fbus_input_frame.command != phone_command_transived) {
+            if (fbus_input_frame.command != phone_command_transmission) {
                 // acknowledge to unexpected command
+                fputs("FBUS ERROR", debug);
+                fbus_input_clear();
                 phone_state = PHONE_STATE_ERROR;
             } else {
                 // TODO: there might be commands which do not have a response?
+                fputs("Received acknowledge", debug);
+                fbus_input_clear();
                 phone_state = PHONE_STATE_WAIT_FOR_RESPONSE;
             }
         } else {
             // unexpected phone response
+            fputs("FBUS ERROR", debug);
+            fbus_input_clear();
             phone_state = PHONE_STATE_ERROR;
         }
         break;
     case PHONE_STATE_WAIT_FOR_RESPONSE:
         if (command == phone_command_receive) {
+            fputs("Received response, send acknowledge", debug);
             // send acknowledge
             uint8_t received_sequence = fbus_input_frame.data[fbus_input_frame.data_size - 1] & 0x0F;
             uint8_t cmd_data[] = {command, received_sequence};
@@ -79,6 +80,8 @@ uint8_t _phone_process_state(FILE *debug) {
             phone_state = PHONE_STATE_RESPONSE_READY;
         } else {
             // unexpected phone response
+            fputs("FBUS ERROR", debug);
+            fbus_input_clear();
             phone_state = PHONE_STATE_ERROR;
         }
         break;
@@ -102,8 +105,9 @@ uint8_t phone_process(FILE *debug) {
 }
 
 void phone_send_get_version() {
+
     fbus_send_frame(COMMAND_GET_HARDWARE_VERSION, sizeof(COMMAND_GET_HARDWARE_VERSION_DATA), COMMAND_GET_HARDWARE_VERSION_DATA);
-    phone_command_transived = COMMAND_GET_HARDWARE_VERSION;
+    phone_command_transmission = COMMAND_GET_HARDWARE_VERSION;
     phone_command_receive = COMMAND_RECEIVE_HARDWARE_VERSION;
     phone_state = PHONE_STATE_WAIT_FOR_ACK;
 }
