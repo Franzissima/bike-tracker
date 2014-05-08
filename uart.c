@@ -183,7 +183,9 @@ int _uart_async_get(FILE *dummy)
     uint8_t *uart_index = (uint8_t*)dummy->udata;
     uint8_t byte = 0;
     FIFO *queue = &uart_input_queue[*uart_index];
-    while(IS_FIFO_EMPTY((*queue))) {}
+    if(IS_FIFO_EMPTY((*queue))) {
+        return EOF;
+    }
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         fifo_read(queue, &byte);
     }
@@ -194,7 +196,11 @@ int _uart_async_put(char c, FILE *dummy)
 {
     uint8_t *uart_index = (uint8_t*)dummy->udata;
     FIFO *queue = &uart_output_queue[*uart_index];
-    while(IS_FIFO_FULL((*queue))) {}
+    while(IS_FIFO_FULL((*queue))) {
+        // warning: we should think about timer here!
+        // If queue is not empty after some amount of
+        // UART cycles, we should fail with EOF
+    }
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         if(IS_FIFO_EMPTY((*queue))) {
             // queue is empty, enable data ready interrupt
