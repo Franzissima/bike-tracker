@@ -130,7 +130,7 @@ ISR(USART1_UDRE_vect) {
 /*
  * Sends one character to UART
  */
-int uart_send_char(char c, FILE *dummy)
+int _uart_put(char c, FILE *dummy)
 {
 #ifdef UCSR1A
     uint8_t *uart_index = (uint8_t*)dummy->udata;
@@ -153,7 +153,7 @@ int uart_send_char(char c, FILE *dummy)
 /*
  * Receive one character from UART.
  */
-int uart_receive_char(FILE *dummy)
+int _uart_get(FILE *dummy)
 {
 #ifdef UCSR1A
     uint8_t *uart_index = (uint8_t*)dummy->udata;
@@ -172,13 +172,13 @@ int uart_receive_char(FILE *dummy)
 }
 
 FILE *uart_open_stream(uint8_t uart_index) {
-	FILE *stream = fdevopen (uart_send_char, uart_receive_char);
+	FILE *stream = fdevopen (_uart_put, _uart_get);
 	stream->udata = malloc(sizeof(uint8_t));
     *(uint8_t*)stream->udata = uart_index;
     return stream;
 }
 
-int uart_async_receive_char(FILE *dummy)
+int _uart_async_get(FILE *dummy)
 {
     uint8_t *uart_index = (uint8_t*)dummy->udata;
     uint8_t byte = 0;
@@ -190,7 +190,7 @@ int uart_async_receive_char(FILE *dummy)
     return byte;
 }
 
-int uart_async_send_char(char c, FILE *dummy)
+int _uart_async_put(char c, FILE *dummy)
 {
     uint8_t *uart_index = (uint8_t*)dummy->udata;
     FIFO *queue = &uart_output_queue[*uart_index];
@@ -219,7 +219,7 @@ int uart_async_send_char(char c, FILE *dummy)
 }
 
 FILE *uart_async_open_stream(uint8_t uart_index) {
-    FILE *stream = fdevopen (uart_async_send_char, uart_async_receive_char);
+    FILE *stream = fdevopen (_uart_async_put, _uart_async_get);
     stream->udata = malloc(sizeof(uint8_t));
     *(uint8_t*)stream->udata = uart_index;
     return stream;
