@@ -31,15 +31,6 @@ uint8_t fifo_write(FIFO *fifo, uint8_t byte) {
     return FIFO_OK;
 }
 
-uint8_t fifo_write_blocking(FIFO *fifo, uint8_t byte) {
-    while(IS_FIFO_FULL((*fifo))) {}
-    uint8_t state;
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-        state = fifo_write(fifo, byte);
-    }
-    return state;
-}
-
 uint8_t fifo_write_bytes(FIFO *fifo, uint8_t bytes[], uint16_t length) {
     for (int i = 0; i < length; ++i) {
         if(fifo_write(fifo, bytes[i]) == FIFO_FULL) {
