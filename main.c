@@ -187,8 +187,8 @@ int main()
         fputs("Expected EOF, FIFO is empty", output);
     }
     fputs("123456", fifo_stream);
-    if (fputc('7', fifo_stream) != 'c') {
-        fputs("Expected char 'c', FIFO is not full", output);
+    if (fputc('7', fifo_stream) != '7') {
+        fputs("Expected char '7', FIFO is not full", output);
     }
     if (fputc('8', fifo_stream) != EOF) {
         fputs("Expected EOF because queue is full", output);
@@ -212,7 +212,7 @@ int main()
         fputs("Expected 6", output);
     }
     if (fgetc(fifo_stream) != '7') {
-        fputs("Expected 8", output);
+        fputs("Expected 7", output);
     }
     if (fgetc(fifo_stream) != EOF) {
         fputs("Expected EOF, FIFO is empty", output);

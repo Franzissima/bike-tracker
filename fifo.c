@@ -70,16 +70,16 @@ int _fifo_get(FILE *stream)
 
 int _fifo_put(char c, FILE *stream) {
     _FIFO_IO *io = (_FIFO_IO*)stream->udata;
-    FIFO output = (*io->output);
-    if (IS_FIFO_FULL(output)) {
+    if (fifo_write(io->output, c) == FIFO_FULL) {
         return EOF;
     }
-    fifo_write(&output, c);
     return 0;
 }
 
 FILE *fifo_open_stream(FIFO *input, FIFO *output) {
-    _FIFO_IO io = {input, output};
+    _FIFO_IO io = {};
+    io.input = input;
+    io.output = output;
     FILE *stream = fdevopen (_fifo_put, _fifo_get);
     stream->udata = malloc(sizeof(_FIFO_IO));
     *(_FIFO_IO*)stream->udata = io;
