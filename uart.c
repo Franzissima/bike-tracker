@@ -209,17 +209,20 @@ int _uart_async_put(char c, FILE *dummy)
                 case 0:
 #endif
                     UCSR0B |= (1 << UDRIE0);
+                    UDR0 = c;
 #ifdef UCSR1A
                     break;
                 case 1:
                     UCSR1B |= (1 << UDRIE1);
+                    UDR1 = c;
                     break;
                 default:
                     break;
             }
 #endif
+        } else {
+            fifo_write(queue, c);
         }
-        fifo_write(queue, c);
     }
     return 0;
 }
