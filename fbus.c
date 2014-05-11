@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define FBUS_START_SEQUENCE 0x60
+#define FBUS_SEQUENCE_UPPER_BITS 0x60
 
-uint8_t fbus_sequence = FBUS_START_SEQUENCE;
+uint8_t fbus_sequence = 0;
 
 uint8_t fbus_state = FBUS_STATE_NO_FRAME;
 
@@ -112,13 +112,13 @@ uint8_t fbus_read_frame() {
 }
 
 void inline fbus_reset_sequence() {
-    fbus_sequence = FBUS_START_SEQUENCE;
+    fbus_sequence = 0;
 }
 
 void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
     // set sequence number
-    data[data_size - 1] = fbus_sequence;
-    fbus_sequence = ((fbus_sequence + 1) & 0x0F) | FBUS_START_SEQUENCE;
+    data[data_size - 1] = fbus_sequence | FBUS_SEQUENCE_UPPER_BITS;
+    fbus_sequence = (fbus_sequence + 1) & 0x0F;
 
     // write header
     fputc(FBUS_FRAME_ID, fbus_stream);
