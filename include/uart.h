@@ -44,6 +44,6 @@ extern FILE *uart_open_stream(uint8_t uart_index);
 /*
  * Open stream to interrupt controlled UART device for usage with stdio functions
  */
-extern FILE *uart_async_open_stream(uint8_t uart_index);
+extern FILE *uart_async_open_stream(uint8_t uart_index, uint8_t wait_for_input);
 
 #endif /* UART_H_ */

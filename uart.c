@@ -192,6 +192,22 @@ int _uart_async_get(FILE *dummy)
     return byte;
 }
 
+int _uart_async_wait_get(FILE *dummy)
+{
+    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    uint8_t byte = 0;
+    FIFO *queue = &uart_input_queue[*uart_index];
+    while(IS_FIFO_EMPTY((*queue))) {
+        // warning: we should think about timer here!
+        // If queue is not empty after some amount of
+        // UART cycles, we should fail with EOF
+    }
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        fifo_read(queue, &byte);
+    }
+    return byte;
+}
+
 int _uart_async_put(char c, FILE *dummy)
 {
     uint8_t *uart_index = (uint8_t*)dummy->udata;
@@ -209,26 +225,28 @@ int _uart_async_put(char c, FILE *dummy)
                 case 0:
 #endif
                     UCSR0B |= (1 << UDRIE0);
-                    UDR0 = c;
 #ifdef UCSR1A
                     break;
                 case 1:
                     UCSR1B |= (1 << UDRIE1);
-                    UDR1 = c;
                     break;
                 default:
                     break;
             }
 #endif
-        } else {
-            fifo_write(queue, c);
         }
+        fifo_write(queue, c);
     }
     return 0;
 }
 
-FILE *uart_async_open_stream(uint8_t uart_index) {
-    FILE *stream = fdevopen (_uart_async_put, _uart_async_get);
+FILE *uart_async_open_stream(uint8_t uart_index, uint8_t wait_for_input) {
+    FILE *stream = NULL;
+    if (wait_for_input == 1) {
+        stream = fdevopen (_uart_async_put, _uart_async_wait_get);
+    } else {
+        stream = fdevopen (_uart_async_put, _uart_async_get);
+    }
     stream->udata = malloc(sizeof(uint8_t));
     *(uint8_t*)stream->udata = uart_index;
     return stream;
