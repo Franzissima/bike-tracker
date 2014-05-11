@@ -24,7 +24,7 @@ uint8_t phone_command_receive;
 void phone_init() {
     // initialize UART
     uart_async_init(PHONE_UART, PHONE_BAUD, PHONE_IN_BUF_SIZE, PHONE_OUT_BUF_SIZE);
-    fbus_init(uart_open_stream(PHONE_UART));
+    fbus_init(uart_async_open_stream(PHONE_UART, 0));
 	fbus_input_clear();
 
 	// TODO: turn phone on
