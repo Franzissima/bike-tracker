@@ -249,20 +249,19 @@ void assertEqualsUint16(uint16_t expected, uint16_t actual, const char* message)
 
 int main()
 {
-    uart_init(0, UART_BAUD_SELECT(9600, F_CPU));
-    output = uart_open_stream(0);
+    uart_init(1, UART_BAUD_SELECT(115200, F_CPU));
+    output = uart_open_stream(1);
     fputs("start tests\n\r", output);
 
     fifo_init(&io, 255);
 
     // test even data size
-    // Frame: 0x1E, 0x00, 0x0C, 0x7F, 0x00, 0x02, 0xD2, 0x01, 0xC1, 0x7C
+    // Frame: 0x1E, 0x00, 0x0C, 0x7F, 0x00, 0x02, 0xD2, 0x60, 0xC0, 0x1D
 
     uint8_t test_data[] = {0xD2, 0x01};
-    fbus_init(&io, &io);
+    fbus_init(fifo_open_stream(&io, &io));
     fbus_send_frame(0x7F, 0x0002, test_data);
     fbus_input_clear();
-    assertEqualsUint8(FBUS_STATE_NO_FRAME, fbus_state, "Expected FBUS_STATE_NO_FRAME");
     assertEqualsUint8(FBUS_STATE_FRAME_ID_READ, fbus_read_frame(), "Expected FBUS_STATE_FRAME_ID_READ");
     assertEqualsUint8(FBUS_STATE_DEST_ADR_READ, fbus_read_frame(), "Expected FBUS_STATE_DEST_ADR_READ");
     assertEqualsUint8(FBUS_STATE_SRC_ADR_READ, fbus_read_frame(), "Expected FBUS_STATE_SRC_ADR_READ");
@@ -275,17 +274,17 @@ int main()
     assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_LSB_READ");
     assertEqualsUint8(0xD2, fbus_input_frame.data[0], "Expected 0xD2");
     assertEqualsUint8(FBUS_STATE_PADDING_BYTE_READ, fbus_read_frame(), "Expected FBUS_STATE_PADDING_BYTE_READ");
-    assertEqualsUint8(0x01, fbus_input_frame.data[1], "Expected 0x01");
+    assertEqualsUint8(0x60, fbus_input_frame.data[1], "Expected 0x60");
     assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(), "Expected FBUS_STATE_EVEN_CHK_READ");
     assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(), "Expected FBUS_STATE_FRAME_READY");
     assertEqualsUint8(0xC0, fbus_input_frame.even_checksum, "Expected 0xC0");
-    assertEqualsUint8(0x7C, fbus_input_frame.odd_checksum, "Expected 0x7C");
+    assertEqualsUint8(0x1D, fbus_input_frame.odd_checksum, "Expected 0x1D");
 
     fputs("Finished test even data size\n\r", output);
 
     // test odd data size
 
-    // Frame: 0x1E, 0x00, 0x0C, 0x7F, 0x00, 0x03, 0xD2, 0x01, 0x10, 0x00, 0xD1, 0x7D
+    // Frame: 0x1E, 0x00, 0x0C, 0x7F, 0x00, 0x03, 0xD2, 0x01, 0x61, 0x00, 0xA1, 0x7D
     uint8_t test_data2[] = {0xD2, 0x01, 0x10};
     fbus_send_frame(0x7F, 0x0003, test_data2);
     fbus_input_clear();
@@ -302,11 +301,11 @@ int main()
     assertEqualsUint8(FBUS_STATE_SIZE_LSB_READ, fbus_read_frame(), "Expected FBUS_STATE_SIZE_LSB_READ");
     assertEqualsUint8(0x01, fbus_input_frame.data[1], "Expected 0x01");
     assertEqualsUint8(FBUS_STATE_DATA_READ, fbus_read_frame(), "Expected FBUS_STATE_DATA_READ");
-    assertEqualsUint8(0x10, fbus_input_frame.data[2], "Expected 0x10");
+    assertEqualsUint8(0x61, fbus_input_frame.data[2], "Expected 0x61");
     assertEqualsUint8(FBUS_STATE_PADDING_BYTE_READ, fbus_read_frame(), "Expected FBUS_STATE_PADDING_BYTE_READ");
     assertEqualsUint8(FBUS_STATE_EVEN_CHK_READ, fbus_read_frame(), "Expected FBUS_STATE_EVEN_CHK_READ");
     assertEqualsUint8(FBUS_STATE_FRAME_READY, fbus_read_frame(), "Expected FBUS_STATE_FRAME_READY");
-    assertEqualsUint8(0xD0, fbus_input_frame.even_checksum, "Expected 0xD0");
+    assertEqualsUint8(0xA1, fbus_input_frame.even_checksum, "Expected 0xA1");
     assertEqualsUint8(0x7D, fbus_input_frame.odd_checksum, "Expected 0x7D");
 
     fputs("Finished test odd data size\n\r", output);
@@ -333,27 +332,25 @@ int main() {
 
 #ifdef TEST_PHONE
 
-FILE *debug;
-
 int main() {
     phone_init();
-    //uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 63, 63);
-    //debug = uart_async_open_stream(1);
+    uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 63, 63);
+    FILE *debug = uart_async_open_stream(1);
     sei();
 
-    //while (phone_process(debug) != PHONE_STATE_READY) {}
-    //fputs("Phone is on!", debug);
-    //fputs("\n\r", debug);
+    while (phone_process(debug) != PHONE_STATE_READY) {}
+    fputs("Phone is on!", debug);
+    fputs("\n\r", debug);
 
     //_delay_ms(10000);
     fputs("Sending receive hardware version request!", debug);
     fputs("\n\r", debug);
 
     phone_send_get_version();
-    //while (phone_process(debug) != PHONE_STATE_READY) {}
-    //fputs("Received hardware version:!", debug);
-    //fputs("\n\r", debug);
-    //fprintf(debug, "%s", fbus_input_frame.data);
+    while (phone_process(debug) != PHONE_STATE_READY) {}
+    fputs("Received hardware version:!", debug);
+    fputs("\n\r", debug);
+    fprintf(debug, "%s", fbus_input_frame.data);
 
     while(1) {}
 }
