@@ -45,15 +45,6 @@ void fbus_input_clear() {
     fbus_input_frame.odd_checksum = 0;
 }
 
-inline uint8_t _fbus_expect_value(uint8_t actual, uint8_t expected) {
-    if (expected == actual) {
-        fbus_state++;
-    } else {
-        fbus_state = FBUS_STATE_FRAME_ERROR;
-    }
-    return fbus_state;
-}
-
 uint8_t fbus_read_frame() {
     if (IS_FBUS_ERROR() || IS_FBUS_READY()) {
         return fbus_state;
@@ -75,7 +66,10 @@ uint8_t fbus_read_frame() {
     fbus_bytes_read++;
     switch (fbus_state) {
         case FBUS_STATE_NO_FRAME:
-            return _fbus_expect_value(c, FBUS_FRAME_ID);
+            if (c == FBUS_FRAME_ID) {
+                fbus_state++;
+            } // ignore none 0x1e bytes (phone sends 0x00 some times)
+            return fbus_state;
         case FBUS_STATE_FRAME_ID_READ:
             return ++fbus_state;
         case FBUS_STATE_DEST_ADR_READ:
