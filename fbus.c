@@ -6,6 +6,7 @@
  */
 
 #include "include/fbus.h"
+#include <util/delay.h>
 #include <util/atomic.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,6 +26,14 @@ FILE *fbus_stream;
 void fbus_init(FILE *stream) {
     fbus_stream = stream;
     fbus_input_frame.data = (uint8_t*)malloc(FBUS_MAX_DATA_LENGTH);
+}
+
+void fbus_synchronize() {
+    // synchronize phone
+    for (int i = 0; i < 127; ++i) {
+        fputc(0x55, fbus_stream);
+        _delay_us(100);
+    }
 }
 
 void fbus_input_clear() {

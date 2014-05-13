@@ -41,8 +41,9 @@ uint8_t _phone_process_state(FILE *debug) {
          1E 14 00 F4 00 01 03 00 1D E1        Second Command
          */
         fbus_input_clear();
-        if (command == 0xF4) {
+        if (command == 0xF4) { // second power on frame received
             // Receiving of these two frames is no indicator for end of power-on-pulse!
+            fbus_synchronize();
             phone_state = PHONE_STATE_READY;
         }
         break;

@@ -54,6 +54,8 @@ extern FBUS_FRAME fbus_input_frame;
 
 extern void fbus_init(FILE *stream);
 
+extern void fbus_synchronize();
+
 extern void fbus_input_clear();
 
 extern uint8_t fbus_read_frame();
