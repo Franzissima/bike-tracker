@@ -21,8 +21,8 @@
 int main()
 {
     buzzer_init();
-    uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 3, 7);
-    FILE *stream0 = uart_async_open_stream(1);
+    uart_async_init(1, UART_BAUD_SELECT(9600, F_CPU), 3, 7);
+    FILE *stream0 = uart_async_open_stream(1, 1);
 
     char buffer[256];
     char *line;
@@ -52,7 +52,7 @@ int main()
     buzzer_init();
     uart_async_init(0, UART_BAUD_SELECT(115200, F_CPU), 31, 31);
     FILE *stream0 = uart_async_open_stream(0);
-    uart_async_init(1, UART_BAUD_SELECT(9600, F_CPU), 255, 255);
+    uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 255, 255);
     FILE *stream1 = uart_async_open_stream(1);
 
     sei();
@@ -335,23 +335,25 @@ int main() {
 int main() {
     phone_init();
     uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 63, 63);
-    FILE *debug = uart_async_open_stream(1);
+    FILE *debug = uart_async_open_stream(1,1);
     sei();
 
-    while (phone_process(debug) != PHONE_STATE_READY) {}
-    fputs("Phone is on!", debug);
+    fputs("Wait for phone power on", debug);
     fputs("\n\r", debug);
 
-    //_delay_ms(10000);
-    fputs("Sending receive hardware version request!", debug);
+    while (phone_process(debug) != PHONE_STATE_READY) {}
+    fputs("Phone is on", debug);
+    fputs("\n\r", debug);
+
+    fputs("Sending receive hardware version request", debug);
     fputs("\n\r", debug);
 
     phone_send_get_version();
+
     while (phone_process(debug) != PHONE_STATE_READY) {}
     fputs("Received hardware version:!", debug);
     fputs("\n\r", debug);
     fprintf(debug, "%s", fbus_input_frame.data);
 
-    while(1) {}
 }
 #endif
