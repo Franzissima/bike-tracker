@@ -21,9 +21,12 @@
 #define LED_PORT           PORTB
 
 /* phone */
-#define PHONE_UART         0
-#define PHONE_BAUD         UART_BAUD_SELECT(115200, F_CPU)
-#define PHONE_IN_BUF_SIZE  0xFF
-#define PHONE_OUT_BUF_SIZE 0xFF
+#define PHONE_UART              0
+#define PHONE_BAUD              UART_BAUD_SELECT(115200, F_CPU)
+#define PHONE_IN_BUF_SIZE       0xFF
+#define PHONE_OUT_BUF_SIZE      0xFF
+// wait n milliseconds after receiving power on frames from phone
+// before staring initialization sequence
+#define PHONE_POWER_ON_DELAY_MS 5000
 
 #endif /* HARDWARE_H_ */

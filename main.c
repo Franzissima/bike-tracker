@@ -343,8 +343,12 @@ int main() {
     fputs("Phone is on\n\r", debug);
 
     fputs("Sending receive hardware version request\n\r", debug);
-    phone_send_get_version();
-    while (phone_process(debug) != PHONE_STATE_READY) {}
+    phone_tx_enable_extended_cmd();
+    uint8_t state;
+    do {
+        state = phone_process(debug);
+        fputc(state, debug);
+    } while (state != PHONE_STATE_READY);
     fprintf(debug, "Received hardware version: %s\n\r", fbus_input_frame.data);
 }
 #endif

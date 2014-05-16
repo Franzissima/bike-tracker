@@ -20,13 +20,14 @@
 #define PHONE_STATE_RESPONSE_READY    4
 #define PHONE_STATE_ERROR             255
 
+extern volatile uint8_t phone_state;
+
 extern void phone_init();
 
 extern uint8_t phone_process(FILE *debug);
 
-/**
- * Retrieve hard- and software version
- */
-extern void phone_send_get_version();
+extern void phone_tx_enable_extended_cmd();
+
+extern void phone_tx_get_hdw_version();
 
 #endif /* PHONE_H_ */
