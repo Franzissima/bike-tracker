@@ -15,7 +15,7 @@
 #define FBUS_PHONE_ID 0x00
 #define FBUS_TERMINAL_ID 0x0C
 
-#define FBUS_MAX_DATA_LENGTH 512
+#define FBUS_MAX_DATA_LENGTH 256
 
 typedef struct {
     uint8_t command;
@@ -54,8 +54,6 @@ extern FBUS_FRAME fbus_input_frame;
 
 extern void fbus_init(FILE *stream);
 
-extern void fbus_synchronize();
-
 extern void fbus_input_clear();
 
 extern uint8_t fbus_read_frame();
@@ -66,5 +64,7 @@ extern void fbus_reset_sequence();
  * Send fbus frame. The data must not contain seqeunce number, this number is calculated.
  */
 extern void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data);
+
+extern void fbus_dump_frame(FILE *debug);
 
 #endif /* FBUS_H_ */

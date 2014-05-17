@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define FBUS_SEQUENCE_UPPER_BITS 0x60
-
 uint8_t fbus_sequence = 0;
 
 uint8_t fbus_state = FBUS_STATE_NO_FRAME;
@@ -20,6 +18,8 @@ uint8_t fbus_state = FBUS_STATE_NO_FRAME;
 uint16_t fbus_bytes_read = 0;
 
 FBUS_FRAME fbus_input_frame;
+
+uint8_t fbus_is_first_frame = 0;
 
 FILE *fbus_stream;
 
@@ -119,9 +119,18 @@ void inline fbus_reset_sequence() {
 }
 
 void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
+    if (fbus_is_first_frame == 0) {
+        fbus_is_first_frame++;
+        fbus_synchronize();
+    }
+
     // set sequence number
-    data[data_size - 1] = fbus_sequence | FBUS_SEQUENCE_UPPER_BITS;
-    fbus_sequence = (fbus_sequence + 1) & 0x0F;
+    if (fbus_sequence == 0) {
+        data[data_size - 1] = (fbus_sequence & 0x0f) | 0x60;
+    } else {
+        data[data_size - 1] = (fbus_sequence & 0x0f) | 0x40;
+    }
+    fbus_sequence++;
 
     // write header
     fputc(FBUS_FRAME_ID, fbus_stream);
@@ -160,4 +169,12 @@ void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
     // write checksums
     fputc(even_checksum, fbus_stream);
     fputc(odd_checksum, fbus_stream);
+}
+
+void fbus_dump_frame(FILE *debug) {
+    fprintf(debug, "command: %#.2x, length: %d, data: ", fbus_input_frame.command, fbus_input_frame.data_size);
+    for (int i = 0; i < fbus_input_frame.data_size; ++i) {
+        fprintf(debug, "%#.2x ", fbus_input_frame.data[i]);
+    }
+    fputs("\n\r", debug);
 }
