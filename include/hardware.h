@@ -25,8 +25,9 @@
 #define PHONE_BAUD              UART_BAUD_SELECT(115200, F_CPU)
 #define PHONE_IN_BUF_SIZE       0xFF
 #define PHONE_OUT_BUF_SIZE      0xFF
-// wait n milliseconds after receiving power on frames from phone
-// before staring initialization sequence
-#define PHONE_POWER_ON_DELAY_MS 5000
-
+// minimum wait n milliseconds between receiving power on frames from phone
+// and starting initialization sequence for first frame send
+#define PHONE_POWER_ON_DELAY_MS 500
+// minimum wait for SIM card ready
+#define PHONE_SIM_CARD_READY_DELAY_MS 5000
 #endif /* HARDWARE_H_ */

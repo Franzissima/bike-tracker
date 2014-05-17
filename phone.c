@@ -13,9 +13,10 @@
 
 #define COMMAND_ACKNOWLEDGE                   0x7f
 
+#define COMMAND_CODE                          0x08
 #define COMMAND_SECURITY                      0x40
-#define COMMAND_GET_HARDWARE_VERSION          0xd1
-#define COMMAND_RECEIVE_HARDWARE_VERSION      0xd2
+#define COMMAND_TX_GET_HARDWARE_VERSION       0xd1
+#define COMMAND_RC_HARDWARE_VERSION           0xd2
 
 volatile uint8_t phone_state = PHONE_STATE_OFF;
 
@@ -39,12 +40,10 @@ uint8_t _phone_process_state(FILE *debug) {
          //1e ff 00 d0 00 03 01 01 e0 00 ff 2d  First Command
          //1e 14 00 f4 00 01 03 00 1d e1        Second Command
         fbus_input_clear();
-        if (command == 0xF4) { // second power on frame received
+        if (command == 0xf4) { // second power on frame received
             // now wait for power up before initialization
             _delay_ms(PHONE_POWER_ON_DELAY_MS);
             // Receiving of these two frames is no indicator for end of power-on-pulse!
-            fbus_synchronize();
-            fputs("Synchronized serial port by sending 0x55 127 times.\n\r", debug);
             phone_state = PHONE_STATE_READY;
         }
         break;
@@ -54,7 +53,6 @@ uint8_t _phone_process_state(FILE *debug) {
             //1e 0c 00 7f 00 02 d1 00 cf 71
             if (fbus_input_frame.data[0] != phone_tx_command) {
                 fputs("Error: Received acknowledge for unexpected command\n\r", debug);
-                fbus_input_clear();
                 phone_state = PHONE_STATE_ERROR;
             } else {
                 fputs("Received acknowledge\n\r", debug);
@@ -63,9 +61,9 @@ uint8_t _phone_process_state(FILE *debug) {
             }
         } else {
             // unexpected phone response
-            fprintf(debug, "Error: Expected acknowledge but got %d\n\r", command);
+            fprintf(debug, "Warning: Expected acknowledge but got %#.2x\n\r", command);
+            fbus_dump_frame(debug);
             fbus_input_clear();
-            phone_state = PHONE_STATE_ERROR;
         }
         break;
     case PHONE_STATE_WAIT_FOR_RESPONSE:
@@ -78,13 +76,12 @@ uint8_t _phone_process_state(FILE *debug) {
             phone_state = PHONE_STATE_RESPONSE_READY;
         } else {
             // unexpected phone response
-            fprintf(debug, "Error: Phone sends unexpected response: %d\n\r", command);
-            fbus_input_clear();
+            fprintf(debug, "Error: Phone sends unexpected response: %#.2x\n\r", command);
             phone_state = PHONE_STATE_ERROR;
         }
         break;
     case PHONE_STATE_RESPONSE_READY:
-        fprintf(debug, "Received message from phone: %d \n\r", command);
+        fprintf(debug, "Received message from phone: %#.2x\n\r", command);
         break;
     default:
         break;
@@ -95,31 +92,50 @@ uint8_t _phone_process_state(FILE *debug) {
 uint8_t phone_process(FILE *debug) {
     uint8_t fbus_state = fbus_read_frame();
     if (IS_FBUS_ERROR()) {
-        fputs("FBUS ERROR", debug);
+        fputs("fbus error", debug);
         fbus_input_clear();
         phone_state = PHONE_STATE_ERROR;
     } else if (IS_FBUS_READY()) {
-        fputs("FBUS READY", debug);
         _phone_process_state(debug);
     } else if (fbus_state != FBUS_STATE_INPUT_QUEUE_EMPTY) {
-        fprintf(debug, "fbus state: %d\n\r", fbus_state);
+        fprintf(debug, "fbus state: %#.2x\n\r", fbus_state);
     }
     return phone_state;
 }
 
+void phone_tx_get_hdw_version() {
+    fbus_input_clear();
+    uint8_t req[] = {0x00, 0x01, 0x00, 0x03, 0x00, 0x01, 0x00};
+    fbus_send_frame(COMMAND_TX_GET_HARDWARE_VERSION, 7, req);
+    phone_tx_command = COMMAND_TX_GET_HARDWARE_VERSION;
+    phone_rc_expected_command = COMMAND_RC_HARDWARE_VERSION;
+    phone_state = PHONE_STATE_WAIT_FOR_ACK;
+}
+
+uint8_t *phone_get_hdw_version() {
+    return fbus_input_frame.data + 4;
+}
+
 void phone_tx_enable_extended_cmd() {
     //1e 00 0c 40 00 06    00 01 64 01 - 01 - 60 -    - 77 26
-    uint8_t req[] = {0x00, 0x01, 0x64, 0x01, 0x01, 0x60};
+    fbus_input_clear();
+    uint8_t req[] = {0x00, 0x01, 0x64, 0x01, 0x01, 0x00};
     fbus_send_frame(COMMAND_SECURITY, 6, req);
     phone_tx_command = COMMAND_SECURITY;
     phone_rc_expected_command = COMMAND_SECURITY;
     phone_state = PHONE_STATE_WAIT_FOR_ACK;
 }
 
-void phone_tx_get_hdw_version() {
-    uint8_t req[] = {0x00, 0x01, 0x00, 0x03, 0x00, 0x01, 0x60};
-    fbus_send_frame(COMMAND_GET_HARDWARE_VERSION, 7, req);
-    phone_tx_command = COMMAND_GET_HARDWARE_VERSION;
-    phone_rc_expected_command = COMMAND_RECEIVE_HARDWARE_VERSION;
+void phone_tx_enter_pin(uint8_t pin[4]) {
+    //1e 00 0c 08 00 0d    00 01 00 0a 02 31 32 33 34 00 00 - 01 - 46 - 00 - 50 0d
+    fbus_input_clear();
+    uint8_t req[] = {0x00, 0x01, 0x00, 0x0a, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+    req[5] = pin[0];
+    req[6] = pin[1];
+    req[7] = pin[2];
+    req[8] = pin[3];
+    fbus_send_frame(COMMAND_CODE, 13, req);
+    phone_tx_command = COMMAND_CODE;
+    phone_rc_expected_command = COMMAND_CODE;
     phone_state = PHONE_STATE_WAIT_FOR_ACK;
 }

@@ -30,4 +30,8 @@ extern void phone_tx_enable_extended_cmd();
 
 extern void phone_tx_get_hdw_version();
 
+extern uint8_t *phone_get_hdw_version();
+
+extern void phone_tx_enter_pin(uint8_t pin[4]);
+
 #endif /* PHONE_H_ */
