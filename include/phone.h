@@ -20,18 +20,43 @@
 #define PHONE_STATE_RESPONSE_READY    4
 #define PHONE_STATE_ERROR             255
 
+#define PHONE_PIN_ACCEPTED            0
+#define PHONE_PIN_NOT_READY           1
+
 extern volatile uint8_t phone_state;
 
 extern void phone_init();
 
 extern uint8_t phone_process(FILE *debug);
 
-extern void phone_tx_enable_extended_cmd();
+extern void phone_tx_get_status();
+
+extern uint8_t phone_get_status();
 
 extern void phone_tx_get_hdw_version();
 
 extern uint8_t *phone_get_hdw_version();
 
+extern void phone_rc_wait_for_network_status();
+
+extern void phone_tx_get_pin_status();
+
+/*
+ Returns:
+ 0: not ready for PIN
+
+ or expected code:
+
+ 1: security code (5 chars)
+ 2: PIN (4 chars)
+ 3: PIN2 (4 chars)
+ 4: PUK (8 chars)
+ 5: PUK2 (8 chars)
+ */
+extern uint8_t phone_get_pin_status();
+
 extern void phone_tx_enter_pin(uint8_t pin[4]);
+
+extern uint8_t phone_enter_pin_result();
 
 #endif /* PHONE_H_ */
