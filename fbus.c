@@ -125,12 +125,14 @@ void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
     }
 
     // set sequence number
-    if (fbus_sequence == 0) {
-        data[data_size - 1] = (fbus_sequence & 0x0f) | 0x60;
-    } else {
-        data[data_size - 1] = (fbus_sequence & 0x0f) | 0x40;
+    if (command != FBUS_COMMAND_ACKNOWLEDGE) {
+        if (fbus_sequence == 0) {
+            data[data_size - 1] = (fbus_sequence & 0x0f) | 0x60;
+        } else {
+            data[data_size - 1] = (fbus_sequence & 0x0f) | 0x40;
+        }
+        fbus_sequence++;
     }
-    fbus_sequence++;
 
     // write header
     fputc(FBUS_FRAME_ID, fbus_stream);

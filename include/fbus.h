@@ -48,6 +48,9 @@ typedef struct {
 #define IS_FBUS_ERROR() ((fbus_state & (1 << 8)) > 0)
 #define IS_FBUS_READY() (fbus_state == FBUS_STATE_FRAME_READY)
 
+#define FBUS_COMMAND_ACKNOWLEDGE 0x7f
+#define FBUS_FRAME_HEADER 0x00, 0x01, 0x00
+
 extern uint16_t fbus_bytes_read;
 
 extern FBUS_FRAME fbus_input_frame;
@@ -60,9 +63,6 @@ extern uint8_t fbus_read_frame();
 
 extern void fbus_reset_sequence();
 
-/*
- * Send fbus frame. The data must not contain seqeunce number, this number is calculated.
- */
 extern void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data);
 
 extern void fbus_dump_frame(FILE *debug);
