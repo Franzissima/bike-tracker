@@ -342,53 +342,44 @@ int main() {
     fputs("*** Wait for phone power on\n\r", debug);
     while (phone_process(debug) != PHONE_STATE_READY) {}
     fputs("Phone is on\n\r", debug);
-
-    fputs("*** Sending receive hardware version request\n\r", debug);
-    phone_tx_get_hdw_version();
-    do {
-        state = phone_process(debug);
-        fprintf(debug, "phone state: %#.2x\n\r", state);
-    } while (state != PHONE_STATE_RESPONSE_READY);
-    fprintf(debug, "Received hardware version: %s\n\r", phone_get_hdw_version());
-
-    fputs("*** Waiting for network status message\n\r", debug);
-    phone_rc_wait_for_network_status();
-    do {
-        state = phone_process(debug);
-        fprintf(debug, "phone state: %#.2x\n\r", state);
-    } while (state != PHONE_STATE_RESPONSE_READY);
-
-//    do {
-//        _delay_ms(500);
-//        fputs("*** Get pin status\n\r", debug);
-//        phone_tx_get_pin_status();
-//        do {
-//            state = phone_process(debug);
-//            fprintf(debug, "phone state: %#.2x\n\r", state);
-//        } while (state != PHONE_STATE_RESPONSE_READY);
-//        fbus_dump_frame(debug);
-//    } while (phone_get_pin_status() == 0);
 //
-//    fputs("*** Enter pin\n\r", debug);
-//    uint8_t pin[] = {0x31, 0x32, 0x33, 0x34};
-//    phone_tx_enter_pin(pin);
+//    fputs("*** Sending receive hardware version request\n\r", debug);
+//    phone_tx_get_hdw_version();
 //    do {
 //        state = phone_process(debug);
 //        fprintf(debug, "phone state: %#.2x\n\r", state);
-//    } while (state != PHONE_STATE_RESPONSE_READY && state != PHONE_STATE_ERROR);
-//    fbus_dump_frame(debug);
+//    } while (state != PHONE_STATE_RESPONSE_READY);
+//    fprintf(debug, "Received hardware version: %s\n\r", phone_get_hdw_version());
+//
+//    fputs("*** Waiting for network status message\n\r", debug);
+//    phone_rc_wait_for_network_status();
+//    do {
+//        state = phone_process(debug);
+//        fprintf(debug, "phone state: %#.2x\n\r", state);
+//    } while (state != PHONE_STATE_RESPONSE_READY);
 
     do {
         _delay_ms(500);
-        fputs("*** Enter pin\n\r", debug);
-        uint8_t pin[] = {0x31, 0x32, 0x33, 0x34};
-        phone_tx_enter_pin(pin);
+        fputs("*** Get pin status\n\r", debug);
+        phone_tx_get_pin_status();
         do {
             state = phone_process(debug);
             fprintf(debug, "phone state: %#.2x\n\r", state);
-        } while (state != PHONE_STATE_RESPONSE_READY && state != PHONE_STATE_ERROR);
+        } while (state != PHONE_STATE_RESPONSE_READY);
         fbus_dump_frame(debug);
-    } while (phone_get_pin_status() != PHONE_PIN_ACCEPTED);
+    } while (phone_get_pin_status() == PHONE_PIN_SIM_CARD_NOT_READY);
+
+    fputs("*** Enter pin\n\r", debug);
+    uint8_t pin[] = {0x31, 0x32, 0x33, 0x34};
+    phone_tx_enter_pin(pin);
+    do {
+        state = phone_process(debug);
+        fprintf(debug, "phone state: %#.2x\n\r", state);
+    } while (state != PHONE_STATE_RESPONSE_READY && state != PHONE_STATE_ERROR);
+    fbus_dump_frame(debug);
+    if (phone_get_pin_status() != PHONE_PIN_ACCEPTED) {
+        fputs("PIN rejected", debug);
+    }
 
     while(1) {}
 }

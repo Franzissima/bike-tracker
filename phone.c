@@ -28,7 +28,7 @@ void phone_init() {
     fbus_init(uart_async_open_stream(PHONE_UART, 0));
 	fbus_input_clear();
 
-	// TODO: turn phone on
+	// TODO: power on phone
 }
 
 void _phone_send_acknowledge(uint8_t rc_command) {
@@ -152,13 +152,6 @@ void phone_tx_get_pin_status() {
     phone_state = PHONE_STATE_WAIT_FOR_ACK;
 }
 
-uint8_t phone_get_pin_status() {
-    if (fbus_input_frame.data[3] == 0x0b && fbus_input_frame.data[4] == 0x01) {
-        return PHONE_PIN_ACCEPTED;
-    }
-    return PHONE_PIN_NOT_READY;
-}
-
 void phone_tx_enter_pin(uint8_t pin[4]) {
     //1e 00 0c 08 00 0d    00 01 00 0a 02 31 32 33 34 00 00 - 01 - 46 - 00 - 50 0d
     fbus_input_clear();
@@ -171,4 +164,36 @@ void phone_tx_enter_pin(uint8_t pin[4]) {
     phone_tx_command = COMMAND_CODE;
     phone_rc_expected_command = COMMAND_CODE;
     phone_state = PHONE_STATE_WAIT_FOR_ACK;
+}
+
+uint8_t phone_get_pin_status() {
+    switch (fbus_input_frame.data[3]) {
+    case 0x05:
+        return PHONE_PIN_CHANGE_OK;
+    case 0x06:
+    case 0x09:
+    case 0x0c:
+        switch (fbus_input_frame.data[4]) {
+        case 0x6f:
+        case 0x79:
+            return PHONE_PIN_SIM_CARD_NOT_READY;
+        case 0x88: // or: code not needed?
+        case 0x8d:
+            return PHONE_PIN_WRONG_PIN_CODE;
+        }
+        break;
+    case 0x08:
+        switch (fbus_input_frame.data[4]) {
+        case 0x01:
+        case 0x02:
+        case 0x03:
+        case 0x04:
+        case 0x05:
+            return PHONE_PIN_WAIT_FOR;
+        }
+        break;
+    case 0x0b:
+        return PHONE_PIN_ACCEPTED;
+    }
+    return PHONE_PIN_UNKNOWN;
 }

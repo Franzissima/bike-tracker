@@ -21,7 +21,11 @@
 #define PHONE_STATE_ERROR             255
 
 #define PHONE_PIN_ACCEPTED            0
-#define PHONE_PIN_NOT_READY           1
+#define PHONE_PIN_SIM_CARD_NOT_READY  1
+#define PHONE_PIN_WRONG_PIN_CODE      2
+#define PHONE_PIN_CHANGE_OK           3
+#define PHONE_PIN_WAIT_FOR            4
+#define PHONE_PIN_UNKNOWN             255
 
 extern volatile uint8_t phone_state;
 
