@@ -27,8 +27,6 @@
 #define MDEVICE_PIN_WAIT_FOR            4
 #define MDEVICE_PIN_UNKNOWN             255
 
-extern volatile uint8_t mdevice_state;
-
 extern void mdevice_init();
 
 extern uint8_t mdevice_process(FILE *debug);

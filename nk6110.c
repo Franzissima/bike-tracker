@@ -16,7 +16,7 @@
 #define COMMAND_TX_GET_HARDWARE_VERSION       0xd1
 #define COMMAND_RC_HARDWARE_VERSION           0xd2
 
-volatile uint8_t mdevice_state = MDEVICE_STATE_OFF;
+uint8_t mdevice_state = MDEVICE_STATE_OFF;
 
 uint8_t mdevice_tx_command;
 uint8_t mdevice_rc_expected_command;
@@ -26,8 +26,6 @@ void mdevice_init() {
     uart_async_init(MDEVICE_UART, MDEVICE_BAUD, MDEVICE_IN_BUF_SIZE, MDEVICE_OUT_BUF_SIZE);
     fbus_init(uart_async_open_stream(MDEVICE_UART, 0));
 	fbus_input_clear();
-
-	// TODO: power on phone
 }
 
 void _mdevice_send_acknowledge(uint8_t rc_command) {
