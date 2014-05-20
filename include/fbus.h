@@ -9,13 +9,12 @@
 #define FBUS_H_
 
 #include <inttypes.h>
+#include "hardware.h"
 #include "fifo.h"
 
 #define FBUS_FRAME_ID 0x1E
 #define FBUS_PHONE_ID 0x00
 #define FBUS_TERMINAL_ID 0x0C
-
-#define FBUS_MAX_DATA_LENGTH 256
 
 typedef struct {
     uint8_t command;
@@ -66,5 +65,19 @@ extern void fbus_reset_sequence();
 extern void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data);
 
 extern void fbus_dump_frame(FILE *debug);
+
+
+#ifdef DEBUG
+
+#define fbus_debug_dump_frame() \
+    fprintf(debug_stream, "command: %#.2x, length: %d, data: ", fbus_input_frame.command, fbus_input_frame.data_size); \
+    for (int i = 0; i < fbus_input_frame.data_size; ++i) { \
+        fprintf(debug_stream, "%#.2x ", fbus_input_frame.data[i]); \
+    } \
+    fputs("\n\r", debug_stream); \
+
+#else
+#define fbus_debug_dump_frame()
+#endif /* DEBUG */
 
 #endif /* FBUS_H_ */

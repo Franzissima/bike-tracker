@@ -4,6 +4,7 @@
  */
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include "include/debug.h"
 #include "include/mdevice.h"
 #include "include/uart.h"
 #include "include/fbus.h"
@@ -37,7 +38,7 @@ void _mdevice_send_acknowledge(uint8_t rc_command) {
     fbus_send_frame(FBUS_COMMAND_ACKNOWLEDGE, 2, cmd_data);
 }
 
-uint8_t _mdevice_process_state(FILE *debug) {
+uint8_t _mdevice_process_state() {
     uint8_t command = fbus_input_frame.command;
     switch (mdevice_state) {
     case MDEVICE_STATE_OFF:
@@ -57,17 +58,17 @@ uint8_t _mdevice_process_state(FILE *debug) {
             //Example acknowledge command send by phone:
             //1e 0c 00 7f 00 02 d1 00 cf 71
             if (fbus_input_frame.data[0] != mdevice_tx_command) {
-                fputs("Error: Received acknowledge for unexpected command\n\r", debug);
+                debug_puts("Error: Received acknowledge for unexpected command\n\r");
                 mdevice_state = MDEVICE_STATE_ERROR;
             } else {
-                fputs("Received acknowledge\n\r", debug);
+                debug_puts("Received acknowledge\n\r");
                 fbus_input_clear();
                 mdevice_state = MDEVICE_STATE_WAIT_FOR_RESPONSE;
             }
         } else {
             // unexpected phone response
-            fprintf(debug, "Warning: Expected acknowledge but got %#.2x\n\r", command);
-            fbus_dump_frame(debug);
+            debug_printf("Warning: Expected acknowledge but got %#.2x\n\r", command);
+            fbus_debug_dump_frame();
             // this might be some status frame, send acknowledge to keep in sync with phone
             _mdevice_send_acknowledge(command);
             fbus_input_clear();
@@ -75,18 +76,18 @@ uint8_t _mdevice_process_state(FILE *debug) {
         break;
     case MDEVICE_STATE_WAIT_FOR_RESPONSE:
         if (command == mdevice_rc_expected_command) {
-            fputs("Received response, send acknowledge\n\r", debug);
+            debug_puts("Received response, send acknowledge\n\r");
             // send acknowledge
             _mdevice_send_acknowledge(command);
             mdevice_state = MDEVICE_STATE_RESPONSE_READY;
         } else {
             // unexpected phone response
-            fprintf(debug, "Error: Phone sends unexpected response: %#.2x\n\r", command);
+            debug_printf("Error: Phone sends unexpected response: %#.2x\n\r", command);
             mdevice_state = MDEVICE_STATE_ERROR;
         }
         break;
     case MDEVICE_STATE_RESPONSE_READY:
-        fprintf(debug, "Received message from phone: %#.2x\n\r", command);
+        debug_printf("Received message from phone: %#.2x\n\r", command);
         break;
     default:
         break;
@@ -94,16 +95,16 @@ uint8_t _mdevice_process_state(FILE *debug) {
     return mdevice_state;
 }
 
-uint8_t mdevice_process(FILE *debug) {
+uint8_t mdevice_process() {
     uint8_t fbus_state = fbus_read_frame();
     if (IS_FBUS_ERROR()) {
-        fputs("fbus error", debug);
+        debug_puts("fbus error");
         fbus_input_clear();
         mdevice_state = MDEVICE_STATE_ERROR;
     } else if (IS_FBUS_READY()) {
-        _mdevice_process_state(debug);
+        _mdevice_process_state();
     } else if (fbus_state != FBUS_STATE_INPUT_QUEUE_EMPTY) {
-        fprintf(debug, "fbus state: %#.2x\n\r", fbus_state);
+        debug_printf("fbus state: %#.2x\n\r", fbus_state);
     }
     return mdevice_state;
 }

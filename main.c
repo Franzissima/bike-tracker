@@ -16,6 +16,8 @@
 #include "include/fbus.h"
 #include "include/led.h"
 #include "include/mdevice.h"
+#include "include/mobile.h"
+#include "include/debug.h"
 
 #ifdef TEST_UART
 int main()
@@ -334,14 +336,18 @@ int main() {
 
 int main() {
     mdevice_init();
-    uart_async_init(1, UART_BAUD_SELECT(115200, F_CPU), 63, 63);
-    FILE *debug = uart_async_open_stream(1,1);
+
+    debug_init();
+
     sei();
     uint8_t state;
 
-    fputs("*** Wait for phone power on\n\r", debug);
-    while (mdevice_process(debug) != MDEVICE_STATE_READY) {}
-    fputs("Phone is on\n\r", debug);
+    MOBILE_POWER_ON_DDR |= MOBILE_POWER_ON_PIN;
+    MOBILE_POWER_ON_PORT |= MOBILE_POWER_ON_PIN;
+
+    debug_puts("*** Wait for phone power on\n\r");
+    while (mdevice_process() != MDEVICE_STATE_READY) {}
+    debug_puts("Phone is on\n\r");
 //
 //    fputs("*** Sending receive hardware version request\n\r", debug);
 //    mdevice_tx_get_hdw_version();
@@ -360,26 +366,41 @@ int main() {
 
     do {
         _delay_ms(500);
-        fputs("*** Get pin status\n\r", debug);
+        debug_puts("*** Get pin status\n\r");
         mdevice_tx_get_pin_status();
         do {
-            state = mdevice_process(debug);
-            fprintf(debug, "phone state: %#.2x\n\r", state);
+            state = mdevice_process();
+            debug_printf("phone state: %#.2x\n\r", state);
         } while (state != MDEVICE_STATE_RESPONSE_READY);
-        fbus_dump_frame(debug);
+
+        fbus_debug_dump_frame();
+
     } while (mdevice_get_pin_status() == MDEVICE_PIN_SIM_CARD_NOT_READY);
 
-    fputs("*** Enter pin\n\r", debug);
+    debug_puts("*** Enter pin\n\r");
     uint8_t pin[] = {0x31, 0x32, 0x33, 0x34};
     mdevice_tx_enter_pin(pin);
     do {
-        state = mdevice_process(debug);
-        fprintf(debug, "phone state: %#.2x\n\r", state);
+        state = mdevice_process();
+        debug_printf("phone state: %#.2x\n\r", state);
     } while (state != MDEVICE_STATE_RESPONSE_READY && state != MDEVICE_STATE_ERROR);
-    fbus_dump_frame(debug);
+
+    fbus_debug_dump_frame();
+
     if (mdevice_get_pin_status() != MDEVICE_PIN_ACCEPTED) {
-        fputs("PIN rejected", debug);
+        debug_puts("PIN rejected");
     }
+
+    MOBILE_POWER_ON_PORT &= ~MOBILE_POWER_ON_PIN;
+
+    // now wait 10 seconds
+
+    _delay_ms(10000);
+
+    // turn phone off
+    MOBILE_POWER_ON_PORT |= MOBILE_POWER_ON_PIN;
+    _delay_ms(5000);
+    MOBILE_POWER_ON_PORT &= ~MOBILE_POWER_ON_PIN;
 
     while(1) {}
 }

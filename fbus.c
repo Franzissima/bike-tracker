@@ -172,11 +172,3 @@ void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
     fputc(even_checksum, fbus_stream);
     fputc(odd_checksum, fbus_stream);
 }
-
-void fbus_dump_frame(FILE *debug) {
-    fprintf(debug, "command: %#.2x, length: %d, data: ", fbus_input_frame.command, fbus_input_frame.data_size);
-    for (int i = 0; i < fbus_input_frame.data_size; ++i) {
-        fprintf(debug, "%#.2x ", fbus_input_frame.data[i]);
-    }
-    fputs("\n\r", debug);
-}

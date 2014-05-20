@@ -10,6 +10,10 @@
 
 /* turn debugging on/of */
 #define DEBUG
+#define DEBUG_UART                1
+#define DEBUG_BAUD                UART_BAUD_SELECT(115200, F_CPU)
+#define DEBUG_IN_BUF_SIZE         63
+#define DEBUG_OUT_BUF_SIZE        63
 
 /* buzzer */
 
@@ -40,5 +44,9 @@
 #define MOBILE_POWER_ON_PIN       (1<<PC0)
 #define MOBILE_POWER_ON_DDR       DDRC
 #define MOBILE_POWER_ON_PORT      PORTC
+
+/* fbus */
+
+#define FBUS_MAX_DATA_LENGTH 256
 
 #endif /* HARDWARE_H_ */

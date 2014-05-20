@@ -29,7 +29,7 @@
 
 extern void mdevice_init();
 
-extern uint8_t mdevice_process(FILE *debug);
+extern uint8_t mdevice_process();
 
 extern void mdevice_tx_get_status();
 
