@@ -23,7 +23,7 @@ void buzzer_init() {
     // set pins to output
     BUZZER_DDR |= BUZZER_PIN_1 | BUZZER_PIN_2;
     // turn buzzer off
-    BUZZER_PORT = BUZZER_PORT & ~(BUZZER_PIN_1 | BUZZER_PIN_2);
+    BUZZER_PORT &= ~(BUZZER_PIN_1 | BUZZER_PIN_2);
 }
 
 void buzzer_beep(uint8_t times, uint16_t length, uint16_t pause_length) {
@@ -37,7 +37,7 @@ void buzzer_beep(uint8_t times, uint16_t length, uint16_t pause_length) {
             _delay_ms(BUZZER_HALF_PERIOD);
         }
         // turn buzzer off
-        BUZZER_PORT = BUZZER_PORT & ~(BUZZER_PIN_1 | BUZZER_PIN_2);
+        BUZZER_PORT &= ~(BUZZER_PIN_1 | BUZZER_PIN_2);
         for (uint16_t i = 0; i < (pause_length / BUZZER_PERIOD); ++i) {
             _delay_ms(BUZZER_PERIOD);
         }
@@ -80,7 +80,7 @@ void buzzer_async_timer() {
                     buzzer_beep_count = buzzer_pause_length;
                 }
                 // turn buzzer off
-                BUZZER_PORT = BUZZER_PORT & ~(BUZZER_PIN_1 | BUZZER_PIN_2);
+                BUZZER_PORT &= ~(BUZZER_PIN_1 | BUZZER_PIN_2);
             }
             break;
         case BUZZER_STATE_PAUSE:
