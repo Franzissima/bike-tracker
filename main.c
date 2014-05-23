@@ -408,44 +408,6 @@ int main() {
 #endif
 
 #ifdef TEST_TIMER
-//
-//int main(void)
-//{
-//    led_init();
-//
-//  // Timer 0 konfigurieren
-//  TCCR0A = (1<<WGM01); // CTC Modus
-//  TCCR0B |= (1<<CS01) | (1<<CS00) ; // Prescaler 64
-//  OCR0A = 58 - 1;
-//
-//  // Compare Interrupt erlauben
-//  TIMSK0 |= (1<<OCIE0A);
-//
-//  // Global Interrupts aktivieren
-//  sei();
-//
-//  while(1)
-//  {
-//    /*Hier kann die aktuelle Zeit
-//      ausgeben werden*/
-//  }
-//}
-//
-///*
-//Der Compare Interrupt Handler
-//wird aufgerufen, wenn
-//TCNT0 = OCR0A = 125-1
-//ist (125 Schritte), d.h. genau alle 1 ms
-//*/
-//ISR (TIMER0_COMPA_vect)
-//{
-//  led_toggle();
-//}
-//
-//
-//
-//
-
 
 void timer_test_1() {
     debug_puts("timer 1\n\r");
