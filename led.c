@@ -18,3 +18,7 @@ inline void led_on() {
 inline void led_off() {
     LED_PORT &= ~(1 << LED_PIN);
 }
+
+inline void led_toggle() {
+    LED_PORT ^= (1 << LED_PIN);
+}
