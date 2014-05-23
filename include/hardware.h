@@ -15,6 +15,12 @@
 #define DEBUG_IN_BUF_SIZE         63
 #define DEBUG_OUT_BUF_SIZE        63
 
+/* timer */
+#define TIMER_COUNT               4
+#define TIMER_PRESCALE            (1<<CS01) | (1<<CS00) // prescaler = clk / 64
+#define TIMER_COMPARE             58 - 1              // prescale and compare value result to 0.0010069444444444444 seconds between ticks
+                                                      // at 3686400 Hz CPU Clock
+
 /* buzzer */
 
 #define BUZZER_PIN_1              (1<<PA0)

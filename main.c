@@ -18,6 +18,7 @@
 #include "include/mdevice.h"
 #include "include/mobile.h"
 #include "include/debug.h"
+#include "include/timer.h"
 
 #ifdef TEST_UART
 int main()
@@ -404,4 +405,78 @@ int main() {
 
     while(1) {}
 }
+#endif
+
+#ifdef TEST_TIMER
+//
+//int main(void)
+//{
+//    led_init();
+//
+//  // Timer 0 konfigurieren
+//  TCCR0A = (1<<WGM01); // CTC Modus
+//  TCCR0B |= (1<<CS01) | (1<<CS00) ; // Prescaler 64
+//  OCR0A = 58 - 1;
+//
+//  // Compare Interrupt erlauben
+//  TIMSK0 |= (1<<OCIE0A);
+//
+//  // Global Interrupts aktivieren
+//  sei();
+//
+//  while(1)
+//  {
+//    /*Hier kann die aktuelle Zeit
+//      ausgeben werden*/
+//  }
+//}
+//
+///*
+//Der Compare Interrupt Handler
+//wird aufgerufen, wenn
+//TCNT0 = OCR0A = 125-1
+//ist (125 Schritte), d.h. genau alle 1 ms
+//*/
+//ISR (TIMER0_COMPA_vect)
+//{
+//  led_toggle();
+//}
+//
+//
+//
+//
+
+
+void timer_test_1() {
+    debug_puts("timer 1\n\r");
+}
+
+void timer_test_2() {
+    debug_puts("timer 2\n\r");
+}
+
+void timer_test_3() {
+    debug_puts("timer 3\n\r");
+}
+
+void timer_test_4() {
+    debug_puts("timer 4\n\r");
+}
+
+int main() {
+    led_init();
+    debug_init();
+    timer_init();
+    sei();
+
+    timer_start_timeout(0, &timer_test_1, 5000);
+    timer_start_timeout(1, &timer_test_2, 100);
+    timer_start_timeout(2, &timer_test_3, 50);
+    timer_start_timeout(3, &timer_test_4, 3000);
+
+    debug_puts("Expected order: 3, 2, 4, 1\n\r");
+
+    while(1) {}
+}
+
 #endif
