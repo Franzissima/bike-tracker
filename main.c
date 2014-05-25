@@ -409,21 +409,8 @@ int main() {
 
 #ifdef TEST_TIMER
 
-void timer_test_1() {
-    debug_puts("timer 1\n\r");
-}
-
-void timer_test_2() {
-    debug_puts("timer 2\n\r");
-    timer_stop_timeout(0);
-}
-
-void timer_test_3() {
-    debug_puts("timer 3\n\r");
-}
-
-void timer_test_4() {
-    debug_puts("timer 4\n\r");
+void timer_test(void *data) {
+    debug_puts(data);
 }
 
 int main() {
@@ -432,10 +419,10 @@ int main() {
     timer_init();
     sei();
 
-    timer_start_timeout(0, &timer_test_1, 5000);
-    timer_start_timeout(1, &timer_test_2, 100);
-    timer_start_timeout(2, &timer_test_3, 50);
-    timer_start_timeout(3, &timer_test_4, 3000);
+    timer_start_timeout(0, &timer_test, "timer 1\n\r", 5000);
+    timer_start_timeout(1, &timer_test, "timer 2\n\r", 100);
+    timer_start_timeout(2, &timer_test, "timer 3\n\r", 50);
+    timer_start_timeout(3, &timer_test, "timer 4\n\r", 3000);
 
     debug_puts("Expected order: 3, 2, 4\n\r");
 

@@ -18,6 +18,7 @@ typedef struct
 {
   timer_time when;
   timer_func action;
+  void *data;
 } timer_entry;
 
 timer_entry *timer_entries[TIMER_COUNT];
@@ -62,7 +63,7 @@ ISR (TIMER0_COMPA_vect)
             active++;
             entry->when--;
             if (entry->when == 0) {
-                entry->action();
+                entry->action(entry->data);
                 active--;
             }
         }
@@ -72,11 +73,12 @@ ISR (TIMER0_COMPA_vect)
     }
 }
 
-void timer_start_timeout(uint8_t index, timer_func action, timer_time timeout) {
+void timer_start_timeout(uint8_t index, timer_func action, void *data, timer_time timeout) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         timer_entry *entry = timer_entries[index];
         entry->when = timeout;
         entry->action = action;
+        entry->data = data;
         if (timer_state == TIMER_STATE_STOPPED) {
             _timer_start();
         }
