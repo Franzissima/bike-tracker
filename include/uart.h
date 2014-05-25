@@ -13,8 +13,6 @@
 #include "fifo.h"
 
 #define UART_BAUD_SELECT(baudRate, xtalCpu) (((xtalCpu) + (baudRate)*8l)/((baudRate)*16l)-1)
-#define UART_BAUD UART_BAUD_SELECT(9600, F_CPU)
-#define UART_TIMEOUT_MS 60000
 
 /*
  * Initialing UART for first use

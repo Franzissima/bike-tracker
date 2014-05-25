@@ -137,12 +137,16 @@ int _uart_put(char c, FILE *dummy)
     switch(*uart_index) {
         case 0:
 #endif
-            loop_until_bit_is_set(UCSR0A, UDRE0);
+            while (!(UCSR0A & (1<<UDRE0))) {
+				// warning: we should think about timeout here!
+            }
             UDR0 = c;
 #ifdef UCSR1A
             break;
         case 1:
-            loop_until_bit_is_set(UCSR1A, UDRE1);
+            while (!(UCSR1A & (1<<UDRE1))) {
+            	// warning: we should think about timeout here!
+            }
             UDR1 = c;
             break;
     }
@@ -160,11 +164,15 @@ int _uart_get(FILE *dummy)
     switch(*uart_index) {
         case 0:
 #endif
-            while (!(UCSR0A & (1<<RXC0))) {}
+            while (!(UCSR0A & (1<<RXC0))) {
+				// warning: we should think about timeout here!
+            }
             return UDR0;
 #ifdef UCSR1A
         case 1:
-            while (!(UCSR1A & (1<<RXC1))) {}
+            while (!(UCSR1A & (1<<RXC1))) {
+	            // warning: we should think about timeout here!
+            }
             return UDR1;
     }
     return EOF;
@@ -212,11 +220,7 @@ int _uart_async_put(char c, FILE *dummy)
 {
     uint8_t *uart_index = (uint8_t*)dummy->udata;
     FIFO *queue = &uart_output_queue[*uart_index];
-    while(IS_FIFO_FULL((*queue))) {
-        // warning: we should think about timer here!
-        // If queue is not empty after some amount of
-        // UART cycles, we should fail with EOF
-    }
+    while(IS_FIFO_FULL((*queue))) {}
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         if(IS_FIFO_EMPTY((*queue))) {
             // queue is empty, enable data ready interrupt
