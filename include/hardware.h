@@ -9,7 +9,7 @@
 #define HARDWARE_H_
 
 /* debug */
-#define DEBUG /* turn debugging on/of */
+//#define DEBUG /* turn debugging on/of */
 #define DEBUG_UART                1
 #define DEBUG_BAUD                UART_BAUD_SELECT(9600, F_CPU)
 #define DEBUG_IN_BUF_SIZE         63
@@ -20,6 +20,11 @@
 #define TIMER_PRESCALE            (1<<CS01) | (1<<CS00) // prescaler = clk / 64
 #define TIMER_COMPARE             58 - 1              // prescale and compare value result to 0.0010069444444444444 seconds between ticks
                                                       // at 3686400 Hz CPU Clock
+
+#define TIMER_UART_INDEX          0
+
+/* uart */
+#define UART_TIMEOUT_MS           10000
 
 /* buzzer */
 

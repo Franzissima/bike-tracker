@@ -23,29 +23,61 @@
 #ifdef TEST_UART
 int main()
 {
+    timer_init();
     buzzer_init();
-    uart_async_init(1, UART_BAUD_SELECT(9600, F_CPU), 3, 7);
-    FILE *stream0 = uart_async_open_stream(1, 1);
+    uart_init(1, UART_BAUD_SELECT(9600, F_CPU));
+
+    FILE *stream = uart_open_stream(1);
 
     char buffer[256];
     char *line;
 
     sei();
 
-    while (1)
-    {
-        fputs("Type a char:\n\r", stream0);
-        int c = fgetc(stream0);
-        buzzer_beep(1, 50, 0);
-        fputs("\n\r", stream0);
-        fputc(c, stream0);
-        fputs("\n\r", stream0);
-        fputs("Type a line:\n\r", stream0);
-        line = fgets(buffer, 256, stream0);
-        fputs(line, stream0);
-        fputs("\n\r", stream0);
+    fputs("*** Test UART without interrupt:\n\r", stream);
+    fputs("Type a char:\n\r", stream);
+    int c = fgetc(stream);
+    buzzer_beep(1, 50, 0);
+    fputs("\n\r", stream);
+    fputc(c, stream);
+    fputs("\n\r", stream);
+    fputs("Type a line:\n\r", stream);
+    line = fgets(buffer, 256, stream);
+    fputs(line, stream);
+    fputs("\n\r", stream);
+    fputs("Testing timeout, do NOT press any key.\n\r", stream);
+    c = fgetc(stream);
+    if (c == EOF) {
+        fputs("Timeout reached, got EOF\n\r", stream);
+    } else {
+        fputs("Error: Timeout not reached, got unexpected input\n\r", stream);
     }
-    return (1);	// should never happen
+
+    cli();
+    uart_async_init(1, UART_BAUD_SELECT(9600, F_CPU), 3, 7);
+        FILE *streamAsync = uart_async_open_stream(1, 1);
+    sei();
+
+    fputs("*** Test async stream:\n\r", streamAsync);
+    fputs("Type a char:\n\r", streamAsync);
+    c = fgetc(streamAsync);
+    buzzer_beep(1, 50, 0);
+    fputs("\n\r", streamAsync);
+    fputc(c, streamAsync);
+    fputs("\n\r", streamAsync);
+    fputs("Type a line:\n\r", streamAsync);
+    line = fgets(buffer, 256, streamAsync);
+    fputs(line, streamAsync);
+    fputs("\n\r", streamAsync);
+    fputs("Testing timeout, do NOT press any key.\n\r", streamAsync);
+    c = fgetc(streamAsync);
+    if (c == EOF) {
+        fputs("Timeout reached, got EOF\n\r", streamAsync);
+    } else {
+        fputs("Error: Timeout not reached, got unexpected input\n\r", streamAsync);
+    }
+
+    while (1) {}
 }
 #endif
 

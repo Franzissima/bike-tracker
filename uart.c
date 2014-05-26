@@ -12,6 +12,7 @@
 #include <util/atomic.h>
 #include "include/hardware.h"
 #include "include/fifo.h"
+#include "include/timer.h"
 #include "include/uart.h"
 
 #ifdef UCSRA
@@ -41,6 +42,10 @@
 
 FIFO uart_input_queue[UART_COUNT];
 FIFO uart_output_queue[UART_COUNT];
+
+#define UART_NO_TIMEOUT         0
+#define UART_TIMEOUT            1
+volatile uint8_t uart_timeout = UART_NO_TIMEOUT;
 
 void uart_init(uint8_t uart_index, uint16_t uart_baud) {
 #ifdef UCSR1A
@@ -127,52 +132,70 @@ ISR(USART1_UDRE_vect) {
 }
 #endif
 
+void _uart_timeout(void *index) {
+    uart_timeout = UART_TIMEOUT;
+}
+
+void _uart_start_timeout() {
+    uart_timeout = UART_NO_TIMEOUT;
+    timer_start_timeout(TIMER_UART_INDEX, _uart_timeout, NULL, UART_TIMEOUT_MS);
+}
+
+void _uart_stop_timeout() {
+    timer_stop_timeout(TIMER_UART_INDEX);
+}
+
 /*
  * Sends one character to UART
  */
-int _uart_put(char c, FILE *dummy)
+int _uart_put(char c, FILE *stream)
 {
 #ifdef UCSR1A
-    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    uint8_t *uart_index = (uint8_t*)stream->udata;
     switch(*uart_index) {
         case 0:
 #endif
-            while (!(UCSR0A & (1<<UDRE0))) {
-				// warning: we should think about timeout here!
-            }
+            while (!(UCSR0A & (1<<UDRE0))) {}
             UDR0 = c;
 #ifdef UCSR1A
             break;
         case 1:
-            while (!(UCSR1A & (1<<UDRE1))) {
-            	// warning: we should think about timeout here!
-            }
+            while (!(UCSR1A & (1<<UDRE1))) {}
             UDR1 = c;
             break;
     }
 #endif
+
 	return 0;
 }
 
 /*
  * Receive one character from UART.
  */
-int _uart_get(FILE *dummy)
+int _uart_get(FILE *stream)
 {
 #ifdef UCSR1A
-    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    uint8_t *uart_index = (uint8_t*)stream->udata;
     switch(*uart_index) {
         case 0:
 #endif
+            _uart_start_timeout();
             while (!(UCSR0A & (1<<RXC0))) {
-				// warning: we should think about timeout here!
+                if (uart_timeout == UART_TIMEOUT) {
+                    return EOF;
+                }
             }
+            _uart_stop_timeout();
             return UDR0;
 #ifdef UCSR1A
         case 1:
+            _uart_start_timeout();
             while (!(UCSR1A & (1<<RXC1))) {
-	            // warning: we should think about timeout here!
+                if (uart_timeout == UART_TIMEOUT) {
+                    return EOF;
+                }
             }
+            _uart_stop_timeout();
             return UDR1;
     }
     return EOF;
@@ -186,9 +209,9 @@ FILE *uart_open_stream(uint8_t uart_index) {
     return stream;
 }
 
-int _uart_async_get(FILE *dummy)
+int _uart_async_get(FILE *stream)
 {
-    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    uint8_t *uart_index = (uint8_t*)stream->udata;
     uint8_t byte = 0;
     FIFO *queue = &uart_input_queue[*uart_index];
     if(IS_FIFO_EMPTY((*queue))) {
@@ -200,25 +223,27 @@ int _uart_async_get(FILE *dummy)
     return byte;
 }
 
-int _uart_async_wait_get(FILE *dummy)
+int _uart_async_wait_get(FILE *stream)
 {
-    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    uint8_t *uart_index = (uint8_t*)stream->udata;
     uint8_t byte = 0;
     FIFO *queue = &uart_input_queue[*uart_index];
+    _uart_start_timeout();
     while(IS_FIFO_EMPTY((*queue))) {
-        // warning: we should think about timer here!
-        // If queue is not empty after some amount of
-        // UART cycles, we should fail with EOF
+        if (uart_timeout == UART_TIMEOUT) {
+            return EOF;
+        }
     }
+    _uart_stop_timeout();
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         fifo_read(queue, &byte);
     }
     return byte;
 }
 
-int _uart_async_put(char c, FILE *dummy)
+int _uart_async_put(char c, FILE *stream)
 {
-    uint8_t *uart_index = (uint8_t*)dummy->udata;
+    uint8_t *uart_index = (uint8_t*)stream->udata;
     FIFO *queue = &uart_output_queue[*uart_index];
     while(IS_FIFO_FULL((*queue))) {}
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
