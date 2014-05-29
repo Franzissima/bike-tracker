@@ -12,6 +12,7 @@
 
 #ifdef NK6110
 
+#define COMMAND_SMS_HANDLING                  0x02
 #define COMMAND_STATUS                        0x04
 #define COMMAND_CODE                          0x08
 #define COMMAND_NETWORK_STATUS                0x0a
@@ -146,14 +147,18 @@ void mdevice_power_on() {
     mdevice_start_timeout();
 }
 
-void mdevice_tx_get_status() {
+static void mdevice_send_frame(uint8_t command, uint8_t expected_command, uint16_t command_length, uint8_t *command_data) {
     fbus_input_clear();
-    uint8_t req[] = {FBUS_FRAME_HEADER, 0x01};
-    fbus_send_frame(COMMAND_STATUS, 4, req);
-    mdevice_tx_command = COMMAND_STATUS;
-    mdevice_rc_expected_command = COMMAND_STATUS;
+    fbus_send_frame(command, command_length, command_data);
+    mdevice_tx_command = command;
+    mdevice_rc_expected_command = expected_command;
     mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
     mdevice_start_timeout();
+}
+
+void mdevice_tx_get_status() {
+    uint8_t req[] = {FBUS_FRAME_HEADER, 0x01};
+    mdevice_send_frame(COMMAND_STATUS, COMMAND_STATUS, 4, req);
 }
 
 uint8_t mdevice_get_status() {
@@ -161,13 +166,8 @@ uint8_t mdevice_get_status() {
 }
 
 void mdevice_tx_get_hdw_version() {
-    fbus_input_clear();
     uint8_t req[] = {FBUS_FRAME_HEADER, 0x03, 0x00, 0x01, 0x00};
-    fbus_send_frame(COMMAND_TX_GET_HARDWARE_VERSION, 7, req);
-    mdevice_tx_command = COMMAND_TX_GET_HARDWARE_VERSION;
-    mdevice_rc_expected_command = COMMAND_RC_HARDWARE_VERSION;
-    mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
-    mdevice_start_timeout();
+    mdevice_send_frame(COMMAND_TX_GET_HARDWARE_VERSION, COMMAND_RC_HARDWARE_VERSION, 7, req);
 }
 
 uint8_t *mdevice_get_hdw_version() {
@@ -182,28 +182,18 @@ void mdevice_rc_wait_for_network_status() {
 }
 
 void mdevice_tx_get_pin_status() {
-    fbus_input_clear();
     uint8_t req[] = {FBUS_FRAME_HEADER, 0x07, 0x01, 0x01, 0x00};
-    fbus_send_frame(COMMAND_CODE, 7, req);
-    mdevice_tx_command = COMMAND_CODE;
-    mdevice_rc_expected_command = COMMAND_CODE;
-    mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
-    mdevice_start_timeout();
+    mdevice_send_frame(COMMAND_CODE, COMMAND_CODE, 7, req);
 }
 
 void mdevice_tx_enter_pin(uint8_t pin[4]) {
     //1e 00 0c 08 00 0d    00 01 00 0a 02 31 32 33 34 00 00 - 01 - 46 - 00 - 50 0d
-    fbus_input_clear();
     uint8_t req[] = {FBUS_FRAME_HEADER, 0x0a, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
     req[5] = pin[0];
     req[6] = pin[1];
     req[7] = pin[2];
     req[8] = pin[3];
-    fbus_send_frame(COMMAND_CODE, 13, req);
-    mdevice_tx_command = COMMAND_CODE;
-    mdevice_rc_expected_command = COMMAND_CODE;
-    mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
-    mdevice_start_timeout();
+    mdevice_send_frame(COMMAND_CODE, COMMAND_CODE, 13, req);
 }
 
 uint8_t mdevice_get_pin_status() {
@@ -236,5 +226,11 @@ uint8_t mdevice_get_pin_status() {
         return MDEVICE_PIN_ACCEPTED;
     }
     return MDEVICE_PIN_UNKNOWN;
+}
+
+void mdevice_tx_get_smsc() {
+    //1e 00 0c 02 00 08    00 01 00 33 64 01 - 01 - 46 - 77 7f
+    uint8_t req[] = {FBUS_FRAME_HEADER, 0x33, 0x64, 0x01, 0x01, 0x00};
+    mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, 8, req);
 }
 #endif
