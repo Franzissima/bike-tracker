@@ -40,11 +40,9 @@ typedef struct {
 #define FBUS_STATE_FRAME_READY FBUS_STATE_ODD_CHK_READ
 
 #define FBUS_STATE_INPUT_QUEUE_EMPTY 127
-
-#define FBUS_STATE_DATA_OVERFLOW 254
 #define FBUS_STATE_FRAME_ERROR 255
 
-#define IS_FBUS_ERROR() ((fbus_state & (1 << 8)) > 0)
+#define IS_FBUS_ERROR() (fbus_state == FBUS_STATE_FRAME_ERROR)
 #define IS_FBUS_READY() (fbus_state == FBUS_STATE_FRAME_READY)
 
 #define FBUS_COMMAND_ACKNOWLEDGE 0x7f

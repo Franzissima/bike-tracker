@@ -6,6 +6,7 @@
 #include <util/delay.h>
 #include "include/debug.h"
 #include "include/mdevice.h"
+#include "include/timer.h"
 #include "include/uart.h"
 #include "include/fbus.h"
 
@@ -21,6 +22,25 @@ uint8_t mdevice_state = MDEVICE_STATE_OFF;
 
 uint8_t mdevice_tx_command;
 uint8_t mdevice_rc_expected_command;
+
+#define MDEVICE_NO_TIMEOUT 0
+#define MDEVICE_TIMEOUT    1
+
+uint8_t volatile _mdevice_timeout = MDEVICE_NO_TIMEOUT;
+
+void _mdevice_timeout_reached(void *data) {
+    _mdevice_timeout = MDEVICE_TIMEOUT;
+}
+
+void _mdevice_start_timeout() {
+    _mdevice_timeout = MDEVICE_NO_TIMEOUT;
+    timer_start_timeout(TIMER_MDEVICE_INDEX, _mdevice_timeout_reached, NULL, MDEVICE_TIMEOUT_MS);
+}
+
+void _mdevice_stop_timeout() {
+    timer_stop_timeout(TIMER_MDEVICE_INDEX);
+    _mdevice_timeout = MDEVICE_NO_TIMEOUT;
+}
 
 void mdevice_init() {
     // initialize UART
@@ -41,15 +61,14 @@ void _mdevice_send_acknowledge(uint8_t rc_command) {
 uint8_t _mdevice_process_state() {
     uint8_t command = fbus_input_frame.command;
     switch (mdevice_state) {
-    case MDEVICE_STATE_OFF:
+    case MDEVICE_STATE_WAIT_FOR_POWER_ON:
          //Nokia 3310 sends power up commands:
          //1e ff 00 d0 00 03 01 01 e0 00 ff 2d  First Command
          //1e 14 00 f4 00 01 03 00 1d e1        Second Command
         fbus_input_clear();
         if (command == 0xf4) { // second power on frame received
-            // now wait for power up before initialization
-            _delay_ms(MDEVICE_POWER_ON_DELAY_MS);
             // Receiving of these two frames is no indicator for end of power-on-pulse!
+            _mdevice_stop_timeout();
             mdevice_state = MDEVICE_STATE_READY;
         }
         break;
@@ -63,6 +82,7 @@ uint8_t _mdevice_process_state() {
             } else {
                 debug_puts("Received acknowledge\n\r");
                 fbus_input_clear();
+                _mdevice_start_timeout();
                 mdevice_state = MDEVICE_STATE_WAIT_FOR_RESPONSE;
             }
         } else {
@@ -72,6 +92,7 @@ uint8_t _mdevice_process_state() {
             // this might be some status frame, send acknowledge to keep in sync with phone
             _mdevice_send_acknowledge(command);
             fbus_input_clear();
+            _mdevice_start_timeout();
         }
         break;
     case MDEVICE_STATE_WAIT_FOR_RESPONSE:
@@ -79,14 +100,17 @@ uint8_t _mdevice_process_state() {
             debug_puts("Received response, send acknowledge\n\r");
             // send acknowledge
             _mdevice_send_acknowledge(command);
+            _mdevice_stop_timeout();
             mdevice_state = MDEVICE_STATE_RESPONSE_READY;
         } else {
             // unexpected phone response
             debug_printf("Error: Phone sends unexpected response: %#.2x\n\r", command);
+            _mdevice_stop_timeout();
             mdevice_state = MDEVICE_STATE_ERROR;
         }
         break;
     case MDEVICE_STATE_RESPONSE_READY:
+        _mdevice_stop_timeout();
         debug_printf("Received message from phone: %#.2x\n\r", command);
         break;
     default:
@@ -98,15 +122,28 @@ uint8_t _mdevice_process_state() {
 uint8_t mdevice_process() {
     uint8_t fbus_state = fbus_read_frame();
     if (IS_FBUS_ERROR()) {
-        debug_puts("fbus error");
+        _mdevice_stop_timeout();
+        debug_puts("FBUS: Error\n\r");
         fbus_input_clear();
         mdevice_state = MDEVICE_STATE_ERROR;
     } else if (IS_FBUS_READY()) {
         _mdevice_process_state();
+#ifdef DEBUG
     } else if (fbus_state != FBUS_STATE_INPUT_QUEUE_EMPTY) {
-        debug_printf("fbus state: %#.2x\n\r", fbus_state);
+        debug_printf("FBUS state: %#.2x\n\r", fbus_state);
+#endif
+    }
+    if (_mdevice_timeout == MDEVICE_TIMEOUT) {
+        debug_puts("MDEVICE: Timeout\n\r");
+        fbus_input_clear();
+        mdevice_state = MDEVICE_STATE_ERROR;
     }
     return mdevice_state;
+}
+
+void mdevice_power_on() {
+    mdevice_state = MDEVICE_STATE_WAIT_FOR_POWER_ON;
+    _mdevice_start_timeout();
 }
 
 void mdevice_tx_get_status() {
@@ -116,6 +153,7 @@ void mdevice_tx_get_status() {
     mdevice_tx_command = COMMAND_STATUS;
     mdevice_rc_expected_command = COMMAND_STATUS;
     mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
+    _mdevice_start_timeout();
 }
 
 uint8_t mdevice_get_status() {
@@ -129,6 +167,7 @@ void mdevice_tx_get_hdw_version() {
     mdevice_tx_command = COMMAND_TX_GET_HARDWARE_VERSION;
     mdevice_rc_expected_command = COMMAND_RC_HARDWARE_VERSION;
     mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
+    _mdevice_start_timeout();
 }
 
 uint8_t *mdevice_get_hdw_version() {
@@ -139,6 +178,7 @@ void mdevice_rc_wait_for_network_status() {
     fbus_input_clear();
     mdevice_rc_expected_command = COMMAND_NETWORK_STATUS;
     mdevice_state = MDEVICE_STATE_WAIT_FOR_RESPONSE;
+    _mdevice_start_timeout();
 }
 
 void mdevice_tx_get_pin_status() {
@@ -148,6 +188,7 @@ void mdevice_tx_get_pin_status() {
     mdevice_tx_command = COMMAND_CODE;
     mdevice_rc_expected_command = COMMAND_CODE;
     mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
+    _mdevice_start_timeout();
 }
 
 void mdevice_tx_enter_pin(uint8_t pin[4]) {
@@ -162,6 +203,7 @@ void mdevice_tx_enter_pin(uint8_t pin[4]) {
     mdevice_tx_command = COMMAND_CODE;
     mdevice_rc_expected_command = COMMAND_CODE;
     mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
+    _mdevice_start_timeout();
 }
 
 uint8_t mdevice_get_pin_status() {

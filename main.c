@@ -368,73 +368,13 @@ int main() {
 #ifdef TEST_PHONE
 
 int main() {
-    mdevice_init();
-
     debug_init();
-
+    timer_init();
+    mobile_init();
     sei();
-    uint8_t state;
 
-    MOBILE_POWER_ON_DDR |= MOBILE_POWER_ON_PIN;
-    MOBILE_POWER_ON_PORT |= MOBILE_POWER_ON_PIN;
-
-    debug_puts("*** Wait for phone power on\n\r");
-    while (mdevice_process() != MDEVICE_STATE_READY) {}
-    debug_puts("Phone is on\n\r");
-//
-//    fputs("*** Sending receive hardware version request\n\r", debug);
-//    mdevice_tx_get_hdw_version();
-//    do {
-//        state = mdevice_process(debug);
-//        fprintf(debug, "phone state: %#.2x\n\r", state);
-//    } while (state != MDEVICE_STATE_RESPONSE_READY);
-//    fprintf(debug, "Received hardware version: %s\n\r", mdevice_get_hdw_version());
-//
-//    fputs("*** Waiting for network status message\n\r", debug);
-//    mdevice_rc_wait_for_network_status();
-//    do {
-//        state = mdevice_process(debug);
-//        fprintf(debug, "phone state: %#.2x\n\r", state);
-//    } while (state != MDEVICE_STATE_RESPONSE_READY);
-
-    do {
-        _delay_ms(500);
-        debug_puts("*** Get pin status\n\r");
-        mdevice_tx_get_pin_status();
-        do {
-            state = mdevice_process();
-            debug_printf("phone state: %#.2x\n\r", state);
-        } while (state != MDEVICE_STATE_RESPONSE_READY);
-
-        fbus_debug_dump_frame();
-
-    } while (mdevice_get_pin_status() == MDEVICE_PIN_SIM_CARD_NOT_READY);
-
-    debug_puts("*** Enter pin\n\r");
-    uint8_t pin[] = {0x31, 0x32, 0x33, 0x34};
-    mdevice_tx_enter_pin(pin);
-    do {
-        state = mdevice_process();
-        debug_printf("phone state: %#.2x\n\r", state);
-    } while (state != MDEVICE_STATE_RESPONSE_READY && state != MDEVICE_STATE_ERROR);
-
-    fbus_debug_dump_frame();
-
-    if (mdevice_get_pin_status() != MDEVICE_PIN_ACCEPTED) {
-        debug_puts("PIN rejected");
-    }
-
-    MOBILE_POWER_ON_PORT &= ~MOBILE_POWER_ON_PIN;
-
-    // now wait 10 seconds
-
-    _delay_ms(10000);
-
-    // turn phone off
-    MOBILE_POWER_ON_PORT |= MOBILE_POWER_ON_PIN;
-    _delay_ms(5000);
-    MOBILE_POWER_ON_PORT &= ~MOBILE_POWER_ON_PIN;
-
+    mobile_on();
+    debug_puts("MAIN: End of process");
     while(1) {}
 }
 #endif

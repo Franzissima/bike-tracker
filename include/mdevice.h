@@ -14,10 +14,11 @@
 #include "hardware.h"
 
 #define MDEVICE_STATE_OFF               0
-#define MDEVICE_STATE_READY             1
-#define MDEVICE_STATE_WAIT_FOR_ACK      2
-#define MDEVICE_STATE_WAIT_FOR_RESPONSE 3
-#define MDEVICE_STATE_RESPONSE_READY    4
+#define MDEVICE_STATE_WAIT_FOR_POWER_ON 1
+#define MDEVICE_STATE_READY             2
+#define MDEVICE_STATE_WAIT_FOR_ACK      3
+#define MDEVICE_STATE_WAIT_FOR_RESPONSE 4
+#define MDEVICE_STATE_RESPONSE_READY    5
 #define MDEVICE_STATE_ERROR             255
 
 #define MDEVICE_PIN_ACCEPTED            0
@@ -29,7 +30,18 @@
 
 extern void mdevice_init();
 
+/* returns:
+MDEVICE_STATE_OFF
+MDEVICE_STATE_WAIT_FOR_POWER_ON
+MDEVICE_STATE_READY
+MDEVICE_STATE_WAIT_FOR_ACK
+MDEVICE_STATE_WAIT_FOR_RESPONSE
+MDEVICE_STATE_RESPONSE_READY
+MDEVICE_STATE_ERROR
+*/
 extern uint8_t mdevice_process();
+
+extern void mdevice_power_on();
 
 extern void mdevice_tx_get_status();
 
@@ -43,17 +55,13 @@ extern void mdevice_rc_wait_for_network_status();
 
 extern void mdevice_tx_get_pin_status();
 
-/*
- Returns:
- 0: not ready for PIN
-
- or expected code:
-
- 1: security code (5 chars)
- 2: PIN (4 chars)
- 3: PIN2 (4 chars)
- 4: PUK (8 chars)
- 5: PUK2 (8 chars)
+/* returns:
+MDEVICE_PIN_ACCEPTED
+MDEVICE_PIN_SIM_CARD_NOT_READY
+MDEVICE_PIN_WRONG_PIN_CODE
+MDEVICE_PIN_CHANGE_OK
+MDEVICE_PIN_WAIT_FOR
+MDEVICE_PIN_UNKNOWN
  */
 extern uint8_t mdevice_get_pin_status();
 
