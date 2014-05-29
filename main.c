@@ -373,7 +373,13 @@ int main() {
     mobile_init();
     sei();
 
-    mobile_on();
+    //mobile_on();
+
+    mdevice_tx_get_smsc();
+    while(mdevice_process() != MDEVICE_STATE_RESPONSE_READY);
+
+    debug_puts(mdevice_get_smsc());
+
     debug_puts("MAIN: End of process");
     while(1) {}
 }

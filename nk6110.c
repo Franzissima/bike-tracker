@@ -233,4 +233,12 @@ void mdevice_tx_get_smsc() {
     uint8_t req[] = {FBUS_FRAME_HEADER, 0x33, 0x64, 0x01, 0x01, 0x00};
     mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, 8, req);
 }
+
+uint8_t *mdevice_get_smsc() {
+    //                      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22
+    // 1e 0c 00 02 00 28   01 08 00 34 01 ed 00 00 a8 00 00 00 00 00 00 00 00 00 00 00 00 07 91 94 71 01
+    // 67 00 00 00 00 00 00 53 4d 53 43 00 - 01 40 - 3e 25
+    return &(fbus_input_frame.data[21]);
+}
+
 #endif
