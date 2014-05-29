@@ -100,8 +100,5 @@ uint8_t mobile_off() {
     MOBILE_POWER_ON_PORT |= MOBILE_POWER_ON_PIN;
     _delay_ms(MOBILE_POWER_SWITCH_MS);
     MOBILE_POWER_ON_PORT &= ~MOBILE_POWER_ON_PIN;
-
-    // test if mobile is powered down?
-
     return MOBILE_READY;
 }
