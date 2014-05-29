@@ -52,7 +52,7 @@
 // minimum wait n milliseconds between receiving power on frames from phone
 // and starting initialization sequence for first frame send
 #define MDEVICE_POWER_ON_DELAY_MS 500
-#define MDEVICE_TIMEOUT_MS        10000
+#define MDEVICE_TIMEOUT_MS        8000
 
 /* mobile */
 
