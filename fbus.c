@@ -28,7 +28,7 @@ void fbus_init(FILE *stream) {
     fbus_input_frame.data = (uint8_t*)malloc(FBUS_MAX_DATA_LENGTH);
 }
 
-void fbus_synchronize() {
+static void fbus_synchronize() {
     // synchronize phone
     for (int i = 0; i < 127; ++i) {
         fputc(0x55, fbus_stream);

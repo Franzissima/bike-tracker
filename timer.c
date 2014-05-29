@@ -26,7 +26,7 @@ timer_entry *timer_entries[TIMER_COUNT];
 uint8_t timer_state = TIMER_STATE_STOPPED;
 
 
-void _timer_start() {
+static void timer_start() {
 #ifdef DEBUG
     led_on();
 #endif
@@ -34,7 +34,7 @@ void _timer_start() {
     timer_state = TIMER_STATE_RUNNING;
 }
 
-void _timer_stop() {
+static void timer_stop() {
 #ifdef DEBUG
     led_off();
 #endif
@@ -69,7 +69,7 @@ ISR (TIMER0_COMPA_vect)
         }
     }
     if (active == 0) {
-        _timer_stop();
+        timer_stop();
     }
 }
 
@@ -80,7 +80,7 @@ void timer_start_timeout(uint8_t index, timer_func action, void *data, timer_tim
         entry->action = action;
         entry->data = data;
         if (timer_state == TIMER_STATE_STOPPED) {
-            _timer_start();
+            timer_start();
         }
     }
 }

@@ -62,9 +62,6 @@ extern void fbus_reset_sequence();
 
 extern void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data);
 
-extern void fbus_dump_frame(FILE *debug);
-
-
 #ifdef DEBUG
 
 #define fbus_debug_dump_frame() \
