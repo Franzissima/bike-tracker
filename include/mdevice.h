@@ -28,6 +28,14 @@
 #define MDEVICE_PIN_WAIT_FOR            4
 #define MDEVICE_PIN_UNKNOWN             255
 
+typedef struct {
+    uint8_t *smsc_octet;
+    uint8_t *remote_number_octet;
+    uint8_t message_length;
+    uint8_t encoded_message_length;
+    uint8_t *encoded_message;
+} MDEVICE_SMS_DATA;
+
 extern void mdevice_init();
 
 /* returns:
@@ -72,5 +80,7 @@ extern uint8_t mdevice_enter_pin_result();
 extern void mdevice_tx_get_smsc();
 
 extern uint8_t *mdevice_get_smsc();
+
+extern void mdevice_tx_send_sms(MDEVICE_SMS_DATA *sms_data);
 
 #endif /* MDEVICE_H_ */

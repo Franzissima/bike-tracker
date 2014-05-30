@@ -367,20 +367,30 @@ int main() {
 
 #ifdef TEST_PHONE
 
+MDEVICE_SMS_DATA sms = {};
+
 int main() {
     debug_init();
     timer_init();
     mobile_init();
     sei();
 
-    //mobile_on();
+    mobile_on();
 
     mdevice_tx_get_smsc();
     while(mdevice_process() != MDEVICE_STATE_RESPONSE_READY);
 
-    debug_puts(mdevice_get_smsc());
+    sms.smsc_octet = mdevice_get_smsc();
+    uint8_t remote_number[12] = {0x0c, 0x91, 0x94, 0x61, 0x23, 0x96, 0x34, 0x34, 0x00, 0x00, 0x00, 0x00};
+    sms.remote_number_octet = remote_number;
+    sms.message_length = 0x16;
+    uint8_t encoded_message[20] = {0x54, 0x74, 0x7a, 0x0e, 0x4a, 0xcf, 0x41, 0x61, 0x10, 0xbd, 0x3c, 0xa7, 0x83, 0xda, 0xe5, 0xf9, 0x3c, 0x7c, 0x2e, 0x03};
+    sms.encoded_message = encoded_message;
+    sms.encoded_message_length = 20;
+    mdevice_tx_send_sms(&sms);
+    while(mdevice_process() != MDEVICE_STATE_RESPONSE_READY);
 
-    debug_puts("MAIN: End of process");
+    mobile_off();
     while(1) {}
 }
 #endif

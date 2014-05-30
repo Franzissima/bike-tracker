@@ -2,6 +2,7 @@
  * Implementation of mobile device API for nokia 6110 based handies.
  * See gnokii project for details: www.gnokii.org, file nk6110.txt
  */
+#include <string.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "include/debug.h"
@@ -239,6 +240,33 @@ uint8_t *mdevice_get_smsc() {
     // 1e 0c 00 02 00 28   01 08 00 34 01 ed 00 00 a8 00 00 00 00 00 00 00 00 00 00 00 00 07 91 94 71 01
     // 67 00 00 00 00 00 00 53 4d 53 43 00 - 01 40 - 3e 25
     return &(fbus_input_frame.data[21]);
+}
+
+void mdevice_tx_send_sms(MDEVICE_SMS_DATA *sms_data) {
+    //                    0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
+    // 1e 00 0c 02 00 40 00 01 00 01 02 00 07 91 94 71 01 67 00 00 00 00 00 00 11 00 00 00 16 0c 91 94 61 23 96 34 34 00 00
+    //
+    // 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65
+    // 00 00 a9 00 00 00 00 00 00 54 74 7a 0e 4a cf 41 61 10 bd 3c a7 83 da e5 f9 3c 7c 2e 03 01 40 8b 31
+    uint8_t req[256] = {FBUS_FRAME_HEADER, 0x01, 0x02, 0x00};
+    uint8_t pos = 6;
+    memcpy(req + pos, sms_data->smsc_octet, 12);
+    pos = 18;
+    req[pos++] = 0x11; // flags
+    req[pos++] = 0x00;
+    req[pos++] = 0x00; // pid - protocol identifier
+    req[pos++] = 0x00; // dcs - data coding scheme
+    req[pos++] = sms_data->message_length;
+    memcpy(req + pos, sms_data->remote_number_octet, 12);
+    pos += 12;
+    req[pos++] = 0xa9; // validity-period code
+    memset(req + pos, 0x00, 6); // service centre time stamp for SMS-Deliver
+    pos += 6;
+    memcpy(req + pos, sms_data->encoded_message, sms_data->encoded_message_length); // message
+    pos += sms_data->encoded_message_length;
+    req[pos++] = 0x01;
+    req[pos++] = 0x00;
+    mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, pos, req);
 }
 
 #endif
