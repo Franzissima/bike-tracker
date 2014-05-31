@@ -21,6 +21,8 @@ do { \
     debug_stream = uart_async_open_stream(1,1); \
 } while(0)
 
+#define debug_putc(c) fputc(c, debug_stream);
+
 #define debug_puts(str) fputs(str, debug_stream);
 
 #define debug_printf(str, val) fprintf(debug_stream, str, val);
@@ -28,6 +30,7 @@ do { \
 #else
 
 #define debug_init()
+#define debug_putc(c)
 #define debug_puts(str)
 #define debug_printf(str, val)
 
