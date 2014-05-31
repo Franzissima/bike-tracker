@@ -17,6 +17,7 @@
 //#define TEST_FIFO_STREAM
 //#define TEST_FBUS
 //#define TEST_LED
-#define TEST_PHONE
+//#define TEST_PHONE
 //#define TEST_TIMER
+#define TEST_GSM
 #endif /* MAIN_H_ */

@@ -19,6 +19,7 @@
 #include "include/mobile.h"
 #include "include/debug.h"
 #include "include/timer.h"
+#include "include/gsm.h"
 
 #ifdef TEST_UART
 int main()
@@ -417,4 +418,20 @@ int main() {
     while(1) {}
 }
 
+#endif
+
+#ifdef TEST_GSM
+int main() {
+    debug_init();
+    sei();
+
+    uint8_t message[23] = "This is a test message";
+    uint8_t packed[22] = {};
+    uint8_t packed_length = gsm_pack_7bit(packed, message, 22);
+    debug_putc(packed_length);
+    for (int i = 0; i < packed_length; ++i) {
+        debug_putc(packed[i]);
+    }
+    while(1) {}
+}
 #endif
