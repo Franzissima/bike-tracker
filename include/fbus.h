@@ -20,7 +20,7 @@ typedef struct {
     uint8_t command;
     uint16_t data_size;
     uint16_t data_pos;
-    uint8_t *data;
+    uint8_t data[FBUS_MAX_DATA_LENGTH];
     uint8_t odd_checksum;
     uint8_t even_checksum;
 } FBUS_FRAME;
@@ -64,15 +64,23 @@ extern void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data);
 
 #ifdef DEBUG
 
-#define fbus_debug_dump_frame() \
-    fprintf(debug_stream, "command: %#.2x, length: %d, data: ", fbus_input_frame.command, fbus_input_frame.data_size); \
-    for (int i = 0; i < fbus_input_frame.data_size; ++i) { \
-        fprintf(debug_stream, "%#.2x ", fbus_input_frame.data[i]); \
+#define fbus_debug_dump_frame(cmd, size, data) \
+    fprintf(debug_stream, "command: %#.2x, length: %d, data: ", cmd, size); \
+    for (int i = 0; i < size; ++i) { \
+        if (data[i] == 0) { \
+            fputs("0x00 ", debug_stream); \
+        } else { \
+            fprintf(debug_stream, "%#.2x ", data[i]); \
+        } \
     } \
-    fputs("\n\r", debug_stream); \
+    fputs("\n", debug_stream); \
+
+#define fbus_debug_dump_input() \
+    fbus_debug_dump_frame(fbus_input_frame.command, fbus_input_frame.data_size, fbus_input_frame.data) \
 
 #else
-#define fbus_debug_dump_frame()
+#define fbus_debug_dump_frame(cmd, size, data)
+#define fbus_debug_dump_input()
 #endif /* DEBUG */
 
 #endif /* FBUS_H_ */

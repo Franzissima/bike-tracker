@@ -6,6 +6,7 @@
  */
 
 #include "include/fbus.h"
+#include "include/debug.h"
 #include <util/delay.h>
 #include <util/atomic.h>
 #include <stdlib.h>
@@ -25,7 +26,6 @@ FILE *fbus_stream;
 
 void fbus_init(FILE *stream) {
     fbus_stream = stream;
-    fbus_input_frame.data = (uint8_t*)malloc(FBUS_MAX_DATA_LENGTH);
 }
 
 static void fbus_synchronize() {
@@ -108,6 +108,8 @@ uint8_t fbus_read_frame() {
                 fbus_state = FBUS_STATE_FRAME_ERROR;
                 return fbus_state;
             }
+            debug_puts("RC Frame: ");
+            fbus_debug_dump_input();
             return ++fbus_state;
     }
     // this should never happen:
@@ -133,6 +135,8 @@ void fbus_send_frame(uint8_t command, uint16_t data_size, uint8_t *data) {
         }
         fbus_sequence++;
     }
+    debug_puts("TX Frame: ")
+    fbus_debug_dump_frame(command, data_size, data);
 
     // write header
     fputc(FBUS_FRAME_ID, fbus_stream);
