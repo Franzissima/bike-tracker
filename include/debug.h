@@ -8,12 +8,15 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
+#include <avr/pgmspace.h>
 #include "hardware.h"
 #include "uart.h"
 
 #ifdef DEBUG
 
 FILE *debug_stream;
+
+extern char *debug_read_from_rom(const char *addr);
 
 #define debug_init() \
 do { \
@@ -23,9 +26,9 @@ do { \
 
 #define debug_putc(c) fputc(c, debug_stream);
 
-#define debug_puts(str) fputs(str, debug_stream);
+#define debug_puts(str) fputs(debug_read_from_rom(PSTR(str)), debug_stream);
 
-#define debug_printf(str, val) fprintf(debug_stream, str, val);
+#define debug_printf(str, val) fprintf(debug_stream, debug_read_from_rom(PSTR(str)), val);
 
 #else
 
