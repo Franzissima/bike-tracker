@@ -77,6 +77,8 @@ extern void mdevice_tx_enter_pin(uint8_t pin[4]);
 
 extern uint8_t mdevice_enter_pin_result();
 
+extern void mdevice_rc_wait_for_sim_login();
+
 extern void mdevice_tx_get_smsc();
 
 extern uint8_t *mdevice_get_smsc();

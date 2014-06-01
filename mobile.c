@@ -86,6 +86,22 @@ uint8_t mobile_on() {
 
         if (state == MOBILE_READY) {
             debug_puts("MOBILE: PIN accepted\n\r");
+            mdevice_rc_wait_for_sim_login();
+            state = mobile_process();
+        }
+
+        if (state == MOBILE_READY) {
+            debug_puts("MOBILE: SIM login\n\r");
+            mdevice_rc_wait_for_network_status();
+            state = mobile_process();
+            if (state != MOBILE_ERROR) {
+                mdevice_rc_wait_for_network_status(); // wait for second, longer network status
+                state = mobile_process();
+            }
+        }
+
+        if (state == MOBILE_READY) {
+            debug_puts("MOBILE: network state received\n\r");
             return state;
         }
 

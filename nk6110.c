@@ -16,6 +16,7 @@
 #define COMMAND_SMS_HANDLING                  0x02
 #define COMMAND_STATUS                        0x04
 #define COMMAND_CODE                          0x08
+#define COMMAND_SIM_STATUS                    0x09
 #define COMMAND_NETWORK_STATUS                0x0a
 #define COMMAND_TX_GET_HARDWARE_VERSION       0xd1
 #define COMMAND_RC_HARDWARE_VERSION           0xd2
@@ -90,7 +91,6 @@ static uint8_t mdevice_process_state() {
         } else {
             // unexpected phone response
             debug_printf("Warning: Expected acknowledge but got %#.2x\n\r", command);
-            fbus_debug_dump_frame();
             // this might be some status frame, send acknowledge to keep in sync with phone
             mdevice_send_acknowledge(command);
             fbus_input_clear();
@@ -104,11 +104,18 @@ static uint8_t mdevice_process_state() {
             mdevice_send_acknowledge(command);
             mdevice_stop_timeout();
             mdevice_state = MDEVICE_STATE_RESPONSE_READY;
+//        } else {
+//            // unexpected phone response
+//            debug_printf("Error: Phone sends unexpected response: %#.2x\n\r", command);
+//            mdevice_stop_timeout();
+//            mdevice_state = MDEVICE_STATE_ERROR;
+//        }
         } else {
             // unexpected phone response
-            debug_printf("Error: Phone sends unexpected response: %#.2x\n\r", command);
-            mdevice_stop_timeout();
-            mdevice_state = MDEVICE_STATE_ERROR;
+            debug_printf("Warning: Phone sends unexpected response: %#.2x\n\r", command);
+            mdevice_send_acknowledge(command);
+            fbus_input_clear();
+            mdevice_start_timeout();
         }
         break;
     case MDEVICE_STATE_RESPONSE_READY:
@@ -130,10 +137,6 @@ uint8_t mdevice_process() {
         mdevice_state = MDEVICE_STATE_ERROR;
     } else if (IS_FBUS_READY()) {
         mdevice_process_state();
-#ifdef DEBUG
-    } else if (fbus_state != FBUS_STATE_INPUT_QUEUE_EMPTY) {
-        debug_printf("FBUS state: %#.2x\n\r", fbus_state);
-#endif
     }
     if (_mdevice_timeout == MDEVICE_TIMEOUT) {
         debug_puts("MDEVICE: Timeout\n\r");
@@ -143,17 +146,24 @@ uint8_t mdevice_process() {
     return mdevice_state;
 }
 
-void mdevice_power_on() {
-    mdevice_state = MDEVICE_STATE_WAIT_FOR_POWER_ON;
-    mdevice_start_timeout();
-}
-
 static void mdevice_send_frame(uint8_t command, uint8_t expected_command, uint16_t command_length, uint8_t *command_data) {
     fbus_input_clear();
     fbus_send_frame(command, command_length, command_data);
     mdevice_tx_command = command;
     mdevice_rc_expected_command = expected_command;
     mdevice_state = MDEVICE_STATE_WAIT_FOR_ACK;
+    mdevice_start_timeout();
+}
+
+static void mdevice_wait_for_command(uint8_t expected_command) {
+    fbus_input_clear();
+    mdevice_rc_expected_command = expected_command;
+    mdevice_state = MDEVICE_STATE_WAIT_FOR_RESPONSE;
+    mdevice_start_timeout();
+}
+
+void mdevice_power_on() {
+    mdevice_state = MDEVICE_STATE_WAIT_FOR_POWER_ON;
     mdevice_start_timeout();
 }
 
@@ -176,10 +186,7 @@ uint8_t *mdevice_get_hdw_version() {
 }
 
 void mdevice_rc_wait_for_network_status() {
-    fbus_input_clear();
-    mdevice_rc_expected_command = COMMAND_NETWORK_STATUS;
-    mdevice_state = MDEVICE_STATE_WAIT_FOR_RESPONSE;
-    mdevice_start_timeout();
+    mdevice_wait_for_command(COMMAND_NETWORK_STATUS);
 }
 
 void mdevice_tx_get_pin_status() {
@@ -228,6 +235,11 @@ uint8_t mdevice_get_pin_status() {
     }
     return MDEVICE_PIN_UNKNOWN;
 }
+
+void mdevice_rc_wait_for_sim_login() {
+    mdevice_wait_for_command(COMMAND_SIM_STATUS);
+}
+
 
 void mdevice_tx_get_smsc() {
     //1e 00 0c 02 00 08    00 01 00 33 64 01 - 01 - 46 - 77 7f
