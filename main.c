@@ -369,7 +369,7 @@ int main() {
 
 #ifdef TEST_PHONE
 
-MDEVICE_SMS_DATA sms = {};
+uint8_t remote_number_octet[12] = {0x0c, 0x91, 0x94, 0x61, 0x23, 0x96, 0x34, 0x34, 0x00, 0x00, 0x00, 0x00};
 
 int main() {
     debug_init();
@@ -379,26 +379,16 @@ int main() {
 
     mobile_on();
 
-    mdevice_tx_get_smsc();
-    while(mdevice_process() != MDEVICE_STATE_RESPONSE_READY);
+    mobile_send_sms(remote_number_octet, "Hello World!");
 
-    //debug_puts(mdevice_get_smsc());
+    mdevice_sms.message[0] = 0x00;
 
-    sms.smsc_octet = mdevice_get_smsc();
-    uint8_t remote_number[12] = {0x0c, 0x91, 0x94, 0x61, 0x23, 0x96, 0x34, 0x34, 0x00, 0x00, 0x00, 0x00};
-    sms.remote_number_octet = remote_number;
-    uint8_t message[13] = "Hello World!";
-    message[12] = 0x00;
-    sms.message_length = 12;
-    uint8_t packed[256] = {};
-    sms.encoded_message_length = gsm_pack_7bit(packed, message, 22);
-    sms.encoded_message = packed;
-    mdevice_tx_send_sms(&sms);
-    while(mdevice_process() != MDEVICE_STATE_RESPONSE_READY);
+    mobile_receive_sms();
 
-    //mobile_off();
+    debug_printf("Received message: %s\n\r", (char *)mdevice_sms.message);
+
+    mobile_off();
     while(1) {}
-//    while(1) {}
 }
 #endif
 

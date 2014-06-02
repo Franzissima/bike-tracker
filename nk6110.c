@@ -31,6 +31,8 @@ uint8_t mdevice_rc_expected_command;
 
 uint8_t volatile _mdevice_timeout = MDEVICE_NO_TIMEOUT;
 
+MDEVICE_SMS_DATA mdevice_sms;
+
 static void mdevice_timeout_reached(void *data) {
     _mdevice_timeout = MDEVICE_TIMEOUT;
 }
@@ -104,12 +106,6 @@ static uint8_t mdevice_process_state() {
             mdevice_send_acknowledge(command);
             mdevice_stop_timeout();
             mdevice_state = MDEVICE_STATE_RESPONSE_READY;
-//        } else {
-//            // unexpected phone response
-//            debug_printf("Error: Phone sends unexpected response: %#.2x\n\r", command);
-//            mdevice_stop_timeout();
-//            mdevice_state = MDEVICE_STATE_ERROR;
-//        }
         } else {
             // unexpected phone response
             debug_printf("Warning: Phone sends unexpected response: %#.2x\n\r", command);
@@ -247,14 +243,14 @@ void mdevice_tx_get_smsc() {
     mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, 8, req);
 }
 
-uint8_t *mdevice_get_smsc() {
+void mdevice_get_smsc() {
     //                      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22
     // 1e 0c 00 02 00 28   01 08 00 34 01 ed 00 00 a8 00 00 00 00 00 00 00 00 00 00 00 00 07 91 94 71 01
     // 67 00 00 00 00 00 00 53 4d 53 43 00 - 01 40 - 3e 25
-    return &(fbus_input_frame.data[21]);
+    memcpy(mdevice_sms.smsc_octet, fbus_input_frame.data + 21, 12);
 }
 
-void mdevice_tx_send_sms(MDEVICE_SMS_DATA *sms_data) {
+void mdevice_tx_send_sms() {
     //                    0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
     // 1e 00 0c 02 00 40 00 01 00 01 02 00 07 91 94 71 01 67 00 00 00 00 00 00 11 00 00 00 16 0c 91 94 61 23 96 34 34 00 00
     //
@@ -262,23 +258,51 @@ void mdevice_tx_send_sms(MDEVICE_SMS_DATA *sms_data) {
     // 00 00 a9 00 00 00 00 00 00 54 74 7a 0e 4a cf 41 61 10 bd 3c a7 83 da e5 f9 3c 7c 2e 03 01 40 8b 31
     uint8_t req[256] = {FBUS_FRAME_HEADER, 0x01, 0x02, 0x00};
     uint8_t pos = 6;
-    memcpy(req + pos, sms_data->smsc_octet, 12);
+    memcpy(req + pos, mdevice_sms.smsc_octet, 12);
     pos = 18;
     req[pos++] = 0x11; // flags
     req[pos++] = 0x00;
     req[pos++] = 0x00; // pid - protocol identifier
     req[pos++] = 0x00; // dcs - data coding scheme
-    req[pos++] = sms_data->message_length;
-    memcpy(req + pos, sms_data->remote_number_octet, 12);
+    req[pos++] = mdevice_sms.message_length;
+    memcpy(req + pos, mdevice_sms.remote_number_octet, 12);
     pos += 12;
     req[pos++] = 0xa9; // validity-period code
-    memset(req + pos, 0x00, 6); // service centre time stamp for SMS-Deliver
+    memset(req + pos, 0x00, 6); // service center time stamp for SMS-Deliver
     pos += 6;
-    memcpy(req + pos, sms_data->encoded_message, sms_data->encoded_message_length); // message
-    pos += sms_data->encoded_message_length;
+    memcpy(req + pos, mdevice_sms.encoded_message, mdevice_sms.encoded_message_length); // message
+    pos += mdevice_sms.encoded_message_length;
     req[pos++] = 0x01;
     req[pos++] = 0x00;
     mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, pos, req);
+}
+
+uint8_t mdevice_get_sms_send_status() {
+    if (fbus_input_frame.data[3] == 0x02) {
+        return MDEVICE_SMS_SEND_OK;
+    }
+    return MDEVICE_SMS_SEND_ERROR;
+}
+
+void mdevice_rc_wait_for_sms() {
+    mdevice_wait_for_command(COMMAND_SMS_HANDLING);
+}
+
+void mdevice_get_sms() {
+    //   0    1    2    3    4    5    6    7    8    9
+    // 0 0x01 0x08 0x00 0x10 0x02 0x0b 0x00 0x07 0x91 0x94
+    // 1 0x71 0x01 0x67 0x00 0x00 0x00 0x10 0x19 0x20 0x04
+    // 2 0x00 0x00 0x0c 0x0c 0x91 0x94 0x61 0x23 0x96 0x34
+    // 3 0x34 0x00 0x70 0x52 0x02 0x41 0x60 0x10 0x51 0x30
+    // 4 0x75 0x80 0xc8 0x32 0x9b 0xfd 0x06 0x5d 0xdf 0x72
+    // 5 0x36 0x39 0x04 0x01 0x43
+    mdevice_sms.memory_type = fbus_input_frame.data[4];
+    mdevice_sms.memory_location = fbus_input_frame.data[5];
+    mdevice_sms.message_length = fbus_input_frame.data[22];
+    memcpy(mdevice_sms.remote_number_octet, fbus_input_frame.data + 22, 12);
+    uint8_t encoded_message_length = fbus_input_frame.data_size - 44;
+    memcpy(mdevice_sms.encoded_message, fbus_input_frame.data + 42, encoded_message_length);
+    mdevice_sms.encoded_message_length = encoded_message_length;
 }
 
 #endif

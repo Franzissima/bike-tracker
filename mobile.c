@@ -4,6 +4,7 @@
  *  Created on: 27.05.2014
  *      Author: andreasbehnke
  */
+#include <string.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include "include/debug.h"
@@ -11,6 +12,7 @@
 #include "include/timer.h"
 #include "include/mobile.h"
 #include "include/mdevice.h"
+#include "include/gsm.h"
 
 #define MOBILE_NO_TIMEOUT      0
 #define MOBILE_TIMEOUT_REACHED 1
@@ -108,6 +110,60 @@ uint8_t mobile_on() {
         // retry
         debug_puts("MOBILE: Got error, retry again\n\r");
         _delay_ms(MOBILE_POWER_SWITCH_WAIT_TRIGGER_MS);
+    }
+    return MOBILE_ERROR;
+}
+uint8_t mobile_send_sms(uint8_t *remote_number_octet, char *message) {
+    memcpy(mdevice_sms.remote_number_octet, remote_number_octet, 12);
+    mdevice_sms.message_length = strlen(message);
+    memcpy(mdevice_sms.message, message, mdevice_sms.message_length);
+
+    uint8_t retry_count = MOBILE_ERROR_RETRY_COUNT;
+    while(retry_count-- > 0) {
+        uint8_t state;
+
+        // retrieve SMSC
+        mdevice_tx_get_smsc();
+        state = mobile_process();
+        if (state == MOBILE_READY) {
+            debug_puts("MOBILE: SMS center number retrieved\n\r");
+            mdevice_get_smsc();
+            mdevice_sms.encoded_message_length = gsm_pack_7bit(mdevice_sms.encoded_message, mdevice_sms.message, mdevice_sms.message_length);
+            mdevice_tx_send_sms();
+            state = mobile_process();
+        }
+
+        if (state == MOBILE_READY) {
+            if (mdevice_get_sms_send_status() == MDEVICE_SMS_SEND_OK) {
+                debug_puts("MOBILE: SMS send\n\r");
+                return state;
+            }
+            state = MOBILE_ERROR;
+        }
+
+        // retry
+        debug_puts("MOBILE: Got error, retry again\n\r");
+    }
+    return MOBILE_ERROR;
+}
+
+uint8_t mobile_receive_sms() {
+    uint8_t retry_count = MOBILE_ERROR_RETRY_COUNT;
+    while(retry_count-- > 0) {
+        uint8_t state;
+
+        // wait for sms
+        mdevice_rc_wait_for_sms();
+        state = mobile_process();
+        if (state == MOBILE_READY) {
+            debug_puts("MOBILE: SMS received\n\r");
+            mdevice_get_sms();
+            gsm_unpack_7bit(mdevice_sms.message, mdevice_sms.encoded_message, mdevice_sms.encoded_message_length);
+            return state;
+        }
+
+        // retry
+        debug_puts("MOBILE: Got error, retry again\n\r");
     }
     return MOBILE_ERROR;
 }

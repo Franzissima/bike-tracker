@@ -12,4 +12,6 @@
 
 extern uint8_t gsm_pack_7bit(uint8_t *dest, uint8_t *src, uint8_t src_length);
 
+extern uint8_t gsm_unpack_7bit(uint8_t *encoded, uint8_t *input, uint8_t in_length);
+
 #endif /* GSM_H_ */

@@ -28,13 +28,21 @@
 #define MDEVICE_PIN_WAIT_FOR            4
 #define MDEVICE_PIN_UNKNOWN             255
 
+#define MDEVICE_SMS_SEND_OK             0
+#define MDEVICE_SMS_SEND_ERROR          255
+
 typedef struct {
-    uint8_t *smsc_octet;
-    uint8_t *remote_number_octet;
+    uint8_t memory_type;     // used by deletion
+    uint8_t memory_location; // used by deletion
+    uint8_t smsc_octet[12];
+    uint8_t remote_number_octet[12];
     uint8_t message_length;
+    uint8_t message[160];
     uint8_t encoded_message_length;
-    uint8_t *encoded_message;
+    uint8_t encoded_message[140];
 } MDEVICE_SMS_DATA;
+
+extern MDEVICE_SMS_DATA mdevice_sms;
 
 extern void mdevice_init();
 
@@ -75,14 +83,22 @@ extern uint8_t mdevice_get_pin_status();
 
 extern void mdevice_tx_enter_pin(uint8_t pin[4]);
 
-extern uint8_t mdevice_enter_pin_result();
-
 extern void mdevice_rc_wait_for_sim_login();
 
 extern void mdevice_tx_get_smsc();
 
-extern uint8_t *mdevice_get_smsc();
+extern void mdevice_get_smsc();
 
-extern void mdevice_tx_send_sms(MDEVICE_SMS_DATA *sms_data);
+extern void mdevice_tx_send_sms();
+
+/* returns:
+MDEVICE_SMS_SEND_OK
+MDEVICE_SMS_SEND_ERROR
+ */
+extern uint8_t mdevice_get_sms_send_status();
+
+extern void mdevice_rc_wait_for_sms();
+
+extern void mdevice_get_sms();
 
 #endif /* MDEVICE_H_ */

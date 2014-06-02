@@ -9,6 +9,7 @@
 #define MOBILE_H_
 
 #include <inttypes.h>
+#include "mdevice.h"
 
 extern void mobile_init();
 
@@ -18,13 +19,15 @@ extern void mobile_init();
 extern void mobile_init();
 
 /*
- Return codes are MOBILE_READY or MOBILE_ERROR
+ All functions return MOBILE_READY or MOBILE_ERROR
  */
+
 extern uint8_t mobile_on();
 
-/*
- Return codes are MOBILE_READY or MOBILE_ERROR
- */
+extern uint8_t mobile_send_sms(uint8_t *remote_number_octet, char *message);
+
+extern uint8_t mobile_receive_sms();
+
 extern uint8_t mobile_off();
 
 #endif /* MOBILE_H_ */
