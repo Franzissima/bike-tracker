@@ -101,4 +101,6 @@ extern void mdevice_rc_wait_for_sms();
 
 extern void mdevice_get_sms();
 
+extern void mdevice_tx_delete_sms();
+
 #endif /* MDEVICE_H_ */

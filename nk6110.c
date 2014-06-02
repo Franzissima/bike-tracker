@@ -19,6 +19,7 @@
 #define COMMAND_CODE                          0x08
 #define COMMAND_SIM_STATUS                    0x09
 #define COMMAND_NETWORK_STATUS                0x0a
+#define COMMAND_SMS_FUNCTIONS                 0x14
 #define COMMAND_TX_GET_HARDWARE_VERSION       0xd1
 #define COMMAND_RC_HARDWARE_VERSION           0xd2
 
@@ -37,6 +38,7 @@ uint8_t const frame_get_hdw_version[] PROGMEM = {FBUS_FRAME_HEADER, 0x03, 0x00, 
 uint8_t const frame_enter_pin[] PROGMEM =       {FBUS_FRAME_HEADER, 0x0a, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
 uint8_t const frame_get_smsc[] PROGMEM =        {FBUS_FRAME_HEADER, 0x33, 0x64, 0x01, 0x01, 0x00};
 uint8_t const frame_send_sms[] PROGMEM =        {FBUS_FRAME_HEADER, 0x01, 0x02, 0x00};
+uint8_t const frame_delete_sms[] PROGMEM =      {FBUS_FRAME_HEADER, 0x0a, 0x00, 0x00, 0x01, 0x00};
 uint8_t mdevice_data[256];
 
 MDEVICE_SMS_DATA mdevice_sms;
@@ -311,6 +313,15 @@ void mdevice_get_sms() {
     uint8_t encoded_message_length = fbus_input_frame.data_size - 44;
     memcpy(mdevice_sms.encoded_message, fbus_input_frame.data + 42, encoded_message_length);
     mdevice_sms.encoded_message_length = encoded_message_length;
+}
+
+void mdevice_tx_delete_sms() {
+    //Byte: 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15
+    //Data: 1E 00 0C 14 00 08 00 01 00 0A 02 02 01 41 11 54
+    memcpy_P(mdevice_data, frame_delete_sms, 8);
+    mdevice_data[4] = mdevice_sms.memory_type;
+    mdevice_data[5] = mdevice_sms.memory_location;
+    mdevice_send_frame(COMMAND_SMS_FUNCTIONS, COMMAND_SMS_FUNCTIONS, 8, mdevice_data);
 }
 
 #endif

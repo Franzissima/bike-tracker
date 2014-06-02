@@ -159,8 +159,13 @@ uint8_t mobile_receive_sms() {
             debug_puts("MOBILE: SMS received\n\r");
             mdevice_get_sms();
             gsm_unpack_7bit(mdevice_sms.message, mdevice_sms.encoded_message, mdevice_sms.encoded_message_length);
+            // delete sms from phone or sim memory
+            mdevice_tx_delete_sms();
+            mobile_process(); // we do not care about errors deleting SMS on phone for now
+
             return state;
         }
+
 
         // retry
         debug_puts("MOBILE: Got error, retry again\n\r");
