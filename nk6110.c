@@ -5,6 +5,7 @@
 #include <string.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <avr/pgmspace.h>
 #include "include/debug.h"
 #include "include/mdevice.h"
 #include "include/timer.h"
@@ -28,8 +29,15 @@ uint8_t mdevice_rc_expected_command;
 
 #define MDEVICE_NO_TIMEOUT 0
 #define MDEVICE_TIMEOUT    1
-
 uint8_t volatile _mdevice_timeout = MDEVICE_NO_TIMEOUT;
+
+uint8_t const frame_get_status[] PROGMEM =      {FBUS_FRAME_HEADER, 0x01};
+uint8_t const frame_get_pin_status[] PROGMEM =  {FBUS_FRAME_HEADER, 0x07, 0x01, 0x01, 0x00};
+uint8_t const frame_get_hdw_version[] PROGMEM = {FBUS_FRAME_HEADER, 0x03, 0x00, 0x01, 0x00};
+uint8_t const frame_enter_pin[] PROGMEM =       {FBUS_FRAME_HEADER, 0x0a, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+uint8_t const frame_get_smsc[] PROGMEM =        {FBUS_FRAME_HEADER, 0x33, 0x64, 0x01, 0x01, 0x00};
+uint8_t const frame_send_sms[] PROGMEM =        {FBUS_FRAME_HEADER, 0x01, 0x02, 0x00};
+uint8_t mdevice_data[256];
 
 MDEVICE_SMS_DATA mdevice_sms;
 
@@ -164,8 +172,8 @@ void mdevice_power_on() {
 }
 
 void mdevice_tx_get_status() {
-    uint8_t req[] = {FBUS_FRAME_HEADER, 0x01};
-    mdevice_send_frame(COMMAND_STATUS, COMMAND_STATUS, 4, req);
+    memcpy_P(mdevice_data, frame_get_status, 4);
+    mdevice_send_frame(COMMAND_STATUS, COMMAND_STATUS, 4, mdevice_data);
 }
 
 uint8_t mdevice_get_status() {
@@ -173,8 +181,8 @@ uint8_t mdevice_get_status() {
 }
 
 void mdevice_tx_get_hdw_version() {
-    uint8_t req[] = {FBUS_FRAME_HEADER, 0x03, 0x00, 0x01, 0x00};
-    mdevice_send_frame(COMMAND_TX_GET_HARDWARE_VERSION, COMMAND_RC_HARDWARE_VERSION, 7, req);
+    memcpy_P(mdevice_data, frame_get_hdw_version, 7);
+    mdevice_send_frame(COMMAND_TX_GET_HARDWARE_VERSION, COMMAND_RC_HARDWARE_VERSION, 7, mdevice_data);
 }
 
 uint8_t *mdevice_get_hdw_version() {
@@ -186,18 +194,18 @@ void mdevice_rc_wait_for_network_status() {
 }
 
 void mdevice_tx_get_pin_status() {
-    uint8_t req[] = {FBUS_FRAME_HEADER, 0x07, 0x01, 0x01, 0x00};
-    mdevice_send_frame(COMMAND_CODE, COMMAND_CODE, 7, req);
+    memcpy_P(mdevice_data, frame_get_pin_status, 7);
+    mdevice_send_frame(COMMAND_CODE, COMMAND_CODE, 7, mdevice_data);
 }
 
 void mdevice_tx_enter_pin(uint8_t pin[4]) {
     //1e 00 0c 08 00 0d    00 01 00 0a 02 31 32 33 34 00 00 - 01 - 46 - 00 - 50 0d
-    uint8_t req[] = {FBUS_FRAME_HEADER, 0x0a, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
-    req[5] = pin[0];
-    req[6] = pin[1];
-    req[7] = pin[2];
-    req[8] = pin[3];
-    mdevice_send_frame(COMMAND_CODE, COMMAND_CODE, 13, req);
+    memcpy_P(mdevice_data, frame_enter_pin, 13);
+    mdevice_data[5] = pin[0];
+    mdevice_data[6] = pin[1];
+    mdevice_data[7] = pin[2];
+    mdevice_data[8] = pin[3];
+    mdevice_send_frame(COMMAND_CODE, COMMAND_CODE, 13, mdevice_data);
 }
 
 uint8_t mdevice_get_pin_status() {
@@ -239,8 +247,8 @@ void mdevice_rc_wait_for_sim_login() {
 
 void mdevice_tx_get_smsc() {
     //1e 00 0c 02 00 08    00 01 00 33 64 01 - 01 - 46 - 77 7f
-    uint8_t req[] = {FBUS_FRAME_HEADER, 0x33, 0x64, 0x01, 0x01, 0x00};
-    mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, 8, req);
+    memcpy_P(mdevice_data, frame_get_smsc, 8);
+    mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, 8, mdevice_data);
 }
 
 void mdevice_get_smsc() {
@@ -256,25 +264,25 @@ void mdevice_tx_send_sms() {
     //
     // 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65
     // 00 00 a9 00 00 00 00 00 00 54 74 7a 0e 4a cf 41 61 10 bd 3c a7 83 da e5 f9 3c 7c 2e 03 01 40 8b 31
-    uint8_t req[256] = {FBUS_FRAME_HEADER, 0x01, 0x02, 0x00};
+    memcpy_P(mdevice_data, frame_send_sms, 6);
     uint8_t pos = 6;
-    memcpy(req + pos, mdevice_sms.smsc_octet, 12);
+    memcpy(mdevice_data + pos, mdevice_sms.smsc_octet, 12);
     pos = 18;
-    req[pos++] = 0x11; // flags
-    req[pos++] = 0x00;
-    req[pos++] = 0x00; // pid - protocol identifier
-    req[pos++] = 0x00; // dcs - data coding scheme
-    req[pos++] = mdevice_sms.message_length;
-    memcpy(req + pos, mdevice_sms.remote_number_octet, 12);
+    mdevice_data[pos++] = 0x11; // flags
+    mdevice_data[pos++] = 0x00;
+    mdevice_data[pos++] = 0x00; // pid - protocol identifier
+    mdevice_data[pos++] = 0x00; // dcs - data coding scheme
+    mdevice_data[pos++] = mdevice_sms.message_length;
+    memcpy(mdevice_data + pos, mdevice_sms.remote_number_octet, 12);
     pos += 12;
-    req[pos++] = 0xa9; // validity-period code
-    memset(req + pos, 0x00, 6); // service center time stamp for SMS-Deliver
+    mdevice_data[pos++] = 0xa9; // validity-period code
+    memset(mdevice_data + pos, 0x00, 6); // service center time stamp for SMS-Deliver
     pos += 6;
-    memcpy(req + pos, mdevice_sms.encoded_message, mdevice_sms.encoded_message_length); // message
+    memcpy(mdevice_data + pos, mdevice_sms.encoded_message, mdevice_sms.encoded_message_length); // message
     pos += mdevice_sms.encoded_message_length;
-    req[pos++] = 0x01;
-    req[pos++] = 0x00;
-    mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, pos, req);
+    mdevice_data[pos++] = 0x01;
+    mdevice_data[pos++] = 0x00;
+    mdevice_send_frame(COMMAND_SMS_HANDLING, COMMAND_SMS_HANDLING, pos, mdevice_data);
 }
 
 uint8_t mdevice_get_sms_send_status() {
