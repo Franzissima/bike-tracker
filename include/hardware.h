@@ -9,7 +9,7 @@
 #define HARDWARE_H_
 
 /* debug */
-//#define DEBUG /* turn debugging on/of */
+#define DEBUG /* turn debugging on/of */
 #define DEBUG_UART                1
 #define DEBUG_BAUD                UART_BAUD_SELECT(9600, F_CPU)
 #define DEBUG_IN_BUF_SIZE         63
@@ -47,8 +47,8 @@
 #define NK6110
 #define MDEVICE_UART              0
 #define MDEVICE_BAUD              UART_BAUD_SELECT(115200, F_CPU)
-#define MDEVICE_IN_BUF_SIZE       0xFF
-#define MDEVICE_OUT_BUF_SIZE      0xFF
+#define MDEVICE_IN_BUF_SIZE       31
+#define MDEVICE_OUT_BUF_SIZE      31
 // minimum wait n milliseconds between receiving power on frames from phone
 // and starting initialization sequence for first frame send
 #define MDEVICE_POWER_ON_DELAY_MS 500
