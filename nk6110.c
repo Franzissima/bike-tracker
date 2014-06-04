@@ -138,7 +138,7 @@ uint8_t mdevice_process() {
     uint8_t fbus_state = fbus_read_frame();
     if (IS_FBUS_ERROR()) {
         mdevice_stop_timeout();
-        debug_puts("FBUS: Error\n\r");
+        fbus_debug_dump_input();
         fbus_input_clear();
         mdevice_state = MDEVICE_STATE_ERROR;
     } else if (IS_FBUS_READY()) {
