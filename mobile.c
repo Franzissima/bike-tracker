@@ -94,16 +94,6 @@ uint8_t mobile_on() {
 
         if (state == MOBILE_READY) {
             debug_puts("MOBILE: SIM login\n\r");
-            mdevice_rc_wait_for_network_status();
-            state = mobile_process();
-            if (state != MOBILE_ERROR) {
-                mdevice_rc_wait_for_network_status(); // wait for second, longer network status
-                state = mobile_process();
-            }
-        }
-
-        if (state == MOBILE_READY) {
-            debug_puts("MOBILE: network state received\n\r");
             return state;
         }
 
@@ -113,6 +103,20 @@ uint8_t mobile_on() {
     }
     return MOBILE_ERROR;
 }
+
+uint8_t mobile_wait_for_network() {
+    mdevice_rc_wait_for_network_status();
+    uint8_t state = mobile_process();
+    if (state != MOBILE_ERROR) {
+        mdevice_rc_wait_for_network_status(); // wait for second, longer network status
+        state = mobile_process();
+    }
+    if (state == MOBILE_READY) {
+        debug_puts("MOBILE: network state received\n\r");
+    }
+    return state;
+}
+
 uint8_t mobile_send_sms(uint8_t *remote_number_octet, char *message) {
     memcpy(mdevice_sms.remote_number_octet, remote_number_octet, 12);
     mdevice_sms.message_length = strlen(message);

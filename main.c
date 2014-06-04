@@ -377,17 +377,25 @@ int main() {
     mobile_init();
     sei();
 
-    mobile_on();
+    uint8_t mobile_state;
 
-    mobile_send_sms(remote_number_octet, "Hello World!");
+    mobile_state = mobile_on();
 
-    mdevice_sms.message[0] = 0x00;
+    if (mobile_state == MOBILE_READY) {
+        mobile_state = mobile_send_sms(remote_number_octet, "Hello World!");
+    }
 
-    mobile_receive_sms();
+    if (mobile_state == MOBILE_READY) {
+        mdevice_sms.message[0] = 0x00;
+        mobile_state = mobile_receive_sms();
+        debug_printf("Received message: %s\n\r", (char *)mdevice_sms.message);
+    }
 
-    debug_printf("Received message: %s\n\r", (char *)mdevice_sms.message);
-
-    mobile_off();
+    if (mobile_state == MOBILE_READY) {
+        mobile_off();
+    } else {
+        debug_puts("Error!");
+    }
     while(1) {}
 }
 #endif

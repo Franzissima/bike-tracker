@@ -24,6 +24,8 @@ extern void mobile_init();
 
 extern uint8_t mobile_on();
 
+extern uint8_t mobile_wait_for_network();
+
 extern uint8_t mobile_send_sms(uint8_t *remote_number_octet, char *message);
 
 extern uint8_t mobile_receive_sms();
