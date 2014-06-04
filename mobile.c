@@ -118,7 +118,7 @@ uint8_t mobile_send_sms(uint8_t *remote_number_octet, char *message) {
     mdevice_sms.message_length = strlen(message);
     memcpy(mdevice_sms.message, message, mdevice_sms.message_length);
 
-    uint8_t retry_count = MOBILE_ERROR_RETRY_COUNT;
+    uint8_t retry_count = MOBILE_SMS_SEND_RETRY_COUNT;
     while(retry_count-- > 0) {
         uint8_t state;
 

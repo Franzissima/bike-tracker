@@ -63,6 +63,7 @@
 #define MOBILE_POWER_SWITCH_WAIT_TRIGGER_MS 500 // wait between on/off trigger of power switch
 
 #define MOBILE_ERROR_RETRY_COUNT    5
+#define MOBILE_SMS_SEND_RETRY_COUNT 1
 #define MOBILE_WAIT_SIM_READY_MS    500
 #define MOBILE_WAIT_SIM_READY_COUNT 20
 
