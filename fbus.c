@@ -99,12 +99,14 @@ uint8_t fbus_read_frame() {
             return ++fbus_state; // skip padding byte
         case FBUS_STATE_PADDING_BYTE_READ:
             if (fbus_input_frame.even_checksum != c) {
+                debug_puts("FBUS Error: Bad even checksum!");
                 fbus_state = FBUS_STATE_FRAME_ERROR;
                 return fbus_state;
             }
             return ++fbus_state;
         case FBUS_STATE_EVEN_CHK_READ:
             if (fbus_input_frame.odd_checksum != c) {
+                debug_puts("FBUS Error: Bad odd checksum!");
                 fbus_state = FBUS_STATE_FRAME_ERROR;
                 return fbus_state;
             }
@@ -113,6 +115,7 @@ uint8_t fbus_read_frame() {
             return ++fbus_state;
     }
     // this should never happen:
+    debug_puts("FBUS Error: reached unexpected state!");
     return FBUS_STATE_FRAME_ERROR;
 }
 
