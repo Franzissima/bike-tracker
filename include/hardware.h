@@ -20,11 +20,16 @@
 #define TIMER_COMPARE             58 - 1                // prescale and compare value result to 0.0010069444444444444 seconds
                                                         // between ticks at 3686400 Hz CPU Clock
 
-#define TIMER_COUNT                     3
+#define TIMER_COUNT                     4
 
 #define TIMER_UART_INDEX                0
 #define TIMER_MDEVICE_INDEX             1
 #define TIMER_MOBILE_INDEX              2
+#define TIMER_BUZZER_INDEX              3
+
+#define TRIGGER_COUNT                   1
+
+#define TRIGGER_BUZZER_INDEX            0
 
 /* uart */
 #define UART_TIMEOUT_MS           10000
@@ -38,7 +43,7 @@
 
 /* led */
 
-#define LED_PIN                   PB0
+#define LED_PIN                   (1<<PB0)
 #define LED_DDR                   DDRB
 #define LED_PORT                  PORTB
 
@@ -72,5 +77,8 @@
 /* fbus */
 
 #define FBUS_MAX_DATA_LENGTH 256
+
+/* mode switch */
+#define MODE_SWITCH_MAX_MODE 3
 
 #endif /* HARDWARE_H_ */

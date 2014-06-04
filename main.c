@@ -4,14 +4,15 @@
  *  Created on: 23.03.2014
  *      Author: andreasbehnke
  */
+#include <avr/interrupt.h>
 #include <util/delay.h>
 #include <stdlib.h>
 #include <avr/sleep.h>
-#include <avr/interrupt.h>
 #include <string.h>
 #include "include/main.h"
-#include "include/uart.h"
+#include "include/timer.h"
 #include "include/buzzer.h"
+#include "include/uart.h"
 #include "include/motion_detection.h"
 #include "include/fifo.h"
 #include "include/fbus.h"
@@ -19,7 +20,6 @@
 #include "include/mdevice.h"
 #include "include/mobile.h"
 #include "include/debug.h"
-#include "include/timer.h"
 #include "include/gsm.h"
 
 #ifdef TEST_UART
@@ -119,33 +119,17 @@ int main() {
 
 #ifdef TEST_BUZZER
 int main() {
-#ifdef TCCR0
-      TCCR0 = (1<<CS01);
-      TIMSK |= (1<<TOIE0);
-#endif
-#ifdef TCCR0A
-      TCCR0B = (1<<CS01);
-      TIMSK0 |= (1<<TOIE0);
-#endif
 
-      sei();
+    debug_init();
+    led_init();
+    timer_init();
+    buzzer_init();
 
-      buzzer_init();
-      while(1)
-      {
-          if(buzzer_async_get_state() != BUZZER_STATE_STOP) {
-              _delay_ms(100);
-          } else {
-              _delay_ms(5000);
-              buzzer_async_beep(3,500,1000);
-          }
+    sei();
 
-      }
-}
+    buzzer_beep(3,100,500);
 
-ISR (TIMER0_OVF_vect)
-{
-  buzzer_async_timer();
+    while(1) {}
 }
 #endif
 
