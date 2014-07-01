@@ -11,9 +11,6 @@
 #include "include/timer.h"
 #include "include/led.h"
 
-#define TIMER_STATE_STOPPED 0
-#define TIMER_STATE_RUNNING 1
-
 typedef struct
 {
   timer_time when;
@@ -25,8 +22,10 @@ timer_entry *timer_entries[TIMER_COUNT];
 
 trigger_func timer_triggers[TRIGGER_COUNT];
 
-uint8_t timer_state = TIMER_STATE_STOPPED;
+#define TIMER_STATE_STOPPED 0
+#define TIMER_STATE_RUNNING 1
 
+volatile uint8_t timer_state = TIMER_STATE_STOPPED;
 
 static void timer_start() {
 #ifdef DEBUG
@@ -59,7 +58,7 @@ void timer_init() {
     OCR0A = TIMER_COMPARE;
 }
 
-ISR (TIMER0_COMPA_vect)
+ISR(TIMER0_COMPA_vect)
 {
     for (uint8_t i = 0; i < TIMER_COUNT; ++i) {
         timer_entry *entry = timer_entries[i];
@@ -91,6 +90,10 @@ ISR (TIMER0_COMPA_vect)
     if (active == 0) {
         timer_stop();
     }
+}
+
+void timer_wait_finish() {
+    while(timer_state == TIMER_STATE_RUNNING) {}
 }
 
 void timer_start_timeout(uint8_t index, timer_func action, void *data, timer_time timeout) {

@@ -19,6 +19,8 @@ typedef uint16_t timer_time;
 
 extern void timer_init();
 
+extern void timer_wait_finish();
+
 extern void timer_start_timeout(uint8_t index, timer_func action, void *data, timer_time timeout);
 
 extern void timer_stop_timeout(uint8_t index);
