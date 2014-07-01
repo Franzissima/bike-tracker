@@ -102,6 +102,11 @@ inline FIFO *uart_get_async_output_fifo(uint8_t uart_index) {
     return &uart_output_queue[uart_index];
 }
 
+extern void uart_async_wait_tx(uint8_t uart_index) {
+    FIFO *queue = &uart_output_queue[uart_index];
+    while (queue->read != queue->write) {}
+}
+
 ISR(USART0_RX_vect) {
     uint8_t byte = UDR0;
     fifo_write(&uart_input_queue[0], byte);
