@@ -79,13 +79,13 @@
 
 /* mode switch */
 #define MODE_SWITCH_MAX_MODE        2
-#define MODE_SWITCH_PIN             PCINT24_PIN
-#define MODE_SWITCH_DDR             PCINT24_DDR
-#define MODE_SWITCH_PORT            PCINT24_PORT
-#define MODE_SWITCH_BIT             (1<<PCINT24_BIT)
-#define MODE_SWITCH_PCIE            (1<<PCIE3)
-#define MODE_SWITCH_PCMSK           PCMSK3
-#define MODE_SWITCH_VECT            PCINT3_vect
+#define MODE_SWITCH_PIN             PCINT23_PIN
+#define MODE_SWITCH_DDR             PCINT23_DDR
+#define MODE_SWITCH_PORT            PCINT23_PORT
+#define MODE_SWITCH_BIT             (1<<PCINT23_BIT)
+#define MODE_SWITCH_PCIE            (1<<PCIE2)
+#define MODE_SWITCH_PCMSK           PCMSK2
+#define MODE_SWITCH_VECT            PCINT2_vect
 #define MODE_SWITCH_DEBOUNCE_MS     100
 #define MODE_SWITCH_TIMEOUT_MS      2000
 #define MODE_SWITCH_LONG_BEEP_MS    1500
