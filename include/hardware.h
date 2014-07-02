@@ -10,57 +10,57 @@
 
 /* debug */
 #define DEBUG /* turn debugging on/of */
-#define DEBUG_UART                1
-#define DEBUG_BAUD                UART_BAUD_SELECT(9600, F_CPU)
-#define DEBUG_IN_BUF_SIZE         63
-#define DEBUG_OUT_BUF_SIZE        63
+#define DEBUG_UART                  1
+#define DEBUG_BAUD                  UART_BAUD_SELECT(9600, F_CPU)
+#define DEBUG_IN_BUF_SIZE           63
+#define DEBUG_OUT_BUF_SIZE          63
 
 /* timer */
-#define TIMER_PRESCALE            (1<<CS01) | (1<<CS00) // prescaler = clk / 64
-#define TIMER_COMPARE             58 - 1                // prescale and compare value result to 0.0010069444444444444 seconds
-                                                        // between ticks at 3686400 Hz CPU Clock
+#define TIMER_PRESCALE              (1<<CS01) | (1<<CS00) // prescaler = clk / 64
+#define TIMER_COMPARE               58 - 1                // prescale and compare value result to 0.0010069444444444444 seconds
+                                                          // between ticks at 3686400 Hz CPU Clock
 
-#define TIMER_COUNT                     4
+#define TIMER_COUNT                 5
 
-#define TIMER_UART_INDEX                0
-#define TIMER_MDEVICE_INDEX             1
-#define TIMER_MOBILE_INDEX              2
-#define TIMER_BUZZER_INDEX              3
+#define TIMER_UART_INDEX            0
+#define TIMER_MDEVICE_INDEX         1
+#define TIMER_MOBILE_INDEX          2
+#define TIMER_BUZZER_INDEX          3
+#define TIMER_MODE_SWITCH_INDEX     4
 
-#define TRIGGER_COUNT                   1
+#define TRIGGER_COUNT               1
 
-#define TRIGGER_BUZZER_INDEX            0
+#define TRIGGER_BUZZER_INDEX        0
 
 /* uart */
-#define UART_TIMEOUT_MS           10000
+#define UART_TIMEOUT_MS             10000
 
 /* buzzer */
 
-#define BUZZER_PIN_1              (1<<PA0)
-#define BUZZER_PIN_2              (1<<PA1)
-#define BUZZER_DDR                DDRA
-#define BUZZER_PORT               PORTA
+#define BUZZER_PIN_1                (1<<PA0)
+#define BUZZER_PIN_2                (1<<PA1)
+#define BUZZER_DDR                  DDRA
+#define BUZZER_PORT                 PORTA
 
 /* led */
 
-#define LED_PIN                   (1<<PB0)
-#define LED_DDR                   DDRB
-#define LED_PORT                  PORTB
+#define LED_PIN                     (1<<PB0)
+#define LED_DDR                     DDRB
+#define LED_PORT                    PORTB
 
 /* mobile device */
 
 #define NK6110
-#define MDEVICE_UART              0
-#define MDEVICE_BAUD              UART_BAUD_SELECT(115200, F_CPU)
-#define MDEVICE_IN_BUF_SIZE       63
-#define MDEVICE_OUT_BUF_SIZE      63
+#define MDEVICE_UART                0
+#define MDEVICE_BAUD                UART_BAUD_SELECT(115200, F_CPU)
+#define MDEVICE_IN_BUF_SIZE         63
+#define MDEVICE_OUT_BUF_SIZE        63
 // minimum wait n milliseconds between receiving power on frames from phone
 // and starting initialization sequence for first frame send
-#define MDEVICE_POWER_ON_DELAY_MS 500
-#define MDEVICE_TIMEOUT_MS        8000
+#define MDEVICE_POWER_ON_DELAY_MS   500
+#define MDEVICE_TIMEOUT_MS          8000
 
 /* mobile */
-
 #define MOBILE_POWER_ON_PIN         (1<<PC0)
 #define MOBILE_POWER_ON_DDR         DDRC
 #define MOBILE_POWER_ON_PORT        PORTC
@@ -75,10 +75,21 @@
 #define MOBILE_PIN {0x31, 0x32, 0x33, 0x34}
 
 /* fbus */
-
-#define FBUS_MAX_DATA_LENGTH 256
+#define FBUS_MAX_DATA_LENGTH        256
 
 /* mode switch */
-#define MODE_SWITCH_MAX_MODE 3
+#define MODE_SWITCH_MAX_MODE        2
+#define MODE_SWITCH_PIN             PCINT24_PIN
+#define MODE_SWITCH_DDR             PCINT24_DDR
+#define MODE_SWITCH_PORT            PCINT24_PORT
+#define MODE_SWITCH_BIT             (1<<PCINT24_BIT)
+#define MODE_SWITCH_PCIE            (1<<PCIE3)
+#define MODE_SWITCH_PCMSK           PCMSK3
+#define MODE_SWITCH_VECT            PCINT3_vect
+#define MODE_SWITCH_DEBOUNCE_MS     100
+#define MODE_SWITCH_TIMEOUT_MS      2000
+#define MODE_SWITCH_LONG_BEEP_MS    1500
+#define MODE_SWITCH_SHORT_BEEP_MS   500
+#define MODE_SWITCH_BEEP_PAUSE_MS   300
 
 #endif /* HARDWARE_H_ */

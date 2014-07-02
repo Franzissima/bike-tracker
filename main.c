@@ -21,6 +21,7 @@
 #include "include/mobile.h"
 #include "include/debug.h"
 #include "include/gsm.h"
+#include "include/mode_switch.h"
 
 #ifdef TEST_UART
 int main()
@@ -421,5 +422,45 @@ int main() {
         debug_putc(packed[i]);
     }
     while(1) {}
+}
+#endif
+
+#ifdef TEST_MODE_SWITCH
+int main() {
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    debug_init();
+    timer_init();
+    led_init();
+    buzzer_init();
+    mode_switch_init();
+
+    sei();
+    debug_puts("Test mode switch\n\r");
+    while(1) {
+        debug_puts("Go to sleep!\n\r");
+        uart_async_wait_tx(DEBUG_UART);
+        timer_wait_finish();
+        cli();
+        mode_switch_enable_watchdog();
+        sleep_enable();
+        sei();
+        sleep_cpu();
+        sleep_disable();
+        debug_puts("Wake up!\n\r");
+        mode_switch_wait();
+        switch (mode_switch_state) {
+            case MODE_SWITCH_STATE_SLEEP:
+                debug_puts("Cause of wake up was not mode switch\n\r");
+                break;
+            case MODE_SWITCH_STATE_NEW_SELECTION:
+                debug_printf("New mode selection: %#.2x\n\r", mode_switch_value);
+                break;
+            case MODE_SWITCH_STATE_NO_SELECTION:
+                debug_puts("Nothing new selected\n\r");
+                break;
+            default:
+                break;
+        }
+    }
 }
 #endif
