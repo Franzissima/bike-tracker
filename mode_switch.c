@@ -25,7 +25,6 @@ static void mode_switch_next();
 static void mode_switch_timer(void *unused);
 
 ISR(MODE_SWITCH_VECT) {
-    debug_puts("MODE SWITCH: Wake up\n\r");
     mode_switch_state = MODE_SWITCH_STATE_WAIT;
     // one shot interrupt
     PCICR &= ~MODE_SWITCH_PCIE;
@@ -34,10 +33,11 @@ ISR(MODE_SWITCH_VECT) {
 
 static void mode_switch_debounce_pressed(void *unused) {
     if ((MODE_SWITCH_PIN & MODE_SWITCH_BIT) > 0) {
-        if (mode_switch_value != 0) {
+        if (mode_switch_value == 0) {
+            mode_switch_value = 1;
+        } else {
             mode_switch_value = 0;
         }
-        debug_puts("MODE SWITCH: Key pressed\n\r");
         mode_switch_next();
     } else {
         mode_switch_state = MODE_SWITCH_STATE_NO_SELECTION;
@@ -61,7 +61,6 @@ static void mode_switch_next() {
 
 static void mode_switch_debounce_released(void *unused) {
     if ((MODE_SWITCH_PIN & MODE_SWITCH_BIT) == 0) {
-        debug_puts("MODE SWITCH: Key released\n\r");
         mode_switch_state = MODE_SWITCH_STATE_NEW_SELECTION;
     } else {
         mode_switch_timer(NULL);
@@ -82,10 +81,12 @@ static void mode_switch_timer(void *unused) {
 
 
 void mode_switch_init() {
+    MODE_SWITCH_PORT |= MODE_SWITCH_BIT;
     MODE_SWITCH_PCMSK |= MODE_SWITCH_BIT;
 }
 
 void mode_switch_enable_watchdog() {
     mode_switch_state = MODE_SWITCH_STATE_SLEEP;
+    PCIFR |= MODE_SWITCH_PCIF;
     PCICR |= MODE_SWITCH_PCIE;
 }

@@ -427,6 +427,40 @@ int main() {
 
 #ifdef TEST_MODE_SWITCH
 int main() {
+    debug_init();
+    timer_init();
+    led_init();
+    buzzer_init();
+    mode_switch_init();
+
+    sei();
+    debug_puts("Test mode switch\n\r");
+    while(1) {
+        timer_wait_finish();
+        debug_puts("Go to sleep!\n\r");
+        mode_switch_enable_watchdog();
+        while(mode_switch_state == MODE_SWITCH_STATE_SLEEP) {}
+        debug_puts("Wake up!\n\r");
+        mode_switch_wait();
+        switch (mode_switch_state) {
+            case MODE_SWITCH_STATE_SLEEP:
+                debug_puts("Cause of wake up was not mode switch\n\r");
+                break;
+            case MODE_SWITCH_STATE_NEW_SELECTION:
+                debug_printf("New mode selection: %#.2x\n\r", mode_switch_value);
+                break;
+            case MODE_SWITCH_STATE_NO_SELECTION:
+                debug_puts("Nothing new selected\n\r");
+                break;
+            default:
+                break;
+        }
+    }
+}
+#endif
+
+#ifdef TEST_SLEEP_MODE
+int main() {
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     debug_init();
     timer_init();

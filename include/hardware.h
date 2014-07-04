@@ -84,6 +84,7 @@
 #define MODE_SWITCH_PORT            PCINT23_PORT
 #define MODE_SWITCH_BIT             (1<<PCINT23_BIT)
 #define MODE_SWITCH_PCIE            (1<<PCIE2)
+#define MODE_SWITCH_PCIF            (1<<PCIF2)
 #define MODE_SWITCH_PCMSK           PCMSK2
 #define MODE_SWITCH_VECT            PCINT2_vect
 #define MODE_SWITCH_DEBOUNCE_MS     100
