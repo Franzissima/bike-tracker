@@ -427,6 +427,7 @@ int main() {
 
 #ifdef TEST_MODE_SWITCH
 int main() {
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     debug_init();
     timer_init();
     led_init();
@@ -438,8 +439,13 @@ int main() {
     while(1) {
         timer_wait_finish();
         debug_puts("Go to sleep!\n\r");
+        uart_async_wait_tx(DEBUG_UART);
+        cli();
         mode_switch_enable_watchdog();
-        while(mode_switch_state == MODE_SWITCH_STATE_SLEEP) {}
+        sleep_enable();
+        sei();
+        sleep_cpu();
+        sleep_disable();
         debug_puts("Wake up!\n\r");
         mode_switch_wait();
         switch (mode_switch_state) {
