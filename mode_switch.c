@@ -81,7 +81,11 @@ static void mode_switch_timer(void *unused) {
 
 
 void mode_switch_init() {
+#ifdef MODE_SWITCH_ENABLE_PULL_UP
     MODE_SWITCH_PORT |= MODE_SWITCH_BIT;
+#else
+    MODE_SWITCH_PORT &= ~MODE_SWITCH_BIT;
+#endif
     MODE_SWITCH_PCMSK |= MODE_SWITCH_BIT;
 }
 
