@@ -106,18 +106,6 @@ int main()
 }
 #endif
 
-#ifdef TEST_MOTION_SENSOR
-int main() {
-    motion_detection_init();
-    while (1) {
-        while(motion_detection_state() == MOTION_DETECTION_ACTIVE) {
-
-        }
-        sleep_cpu();
-    }
-}
-#endif
-
 #ifdef TEST_BUZZER
 int main() {
 
@@ -457,6 +445,47 @@ int main() {
                 break;
             case MODE_SWITCH_STATE_NO_SELECTION:
                 debug_puts("Nothing new selected\n\r");
+                break;
+            default:
+                break;
+        }
+    }
+}
+#endif
+
+#ifdef TEST_MOTION_SENSOR
+int main() {
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    debug_init();
+    timer_init();
+    led_init();
+    buzzer_init();
+    motion_detection_init();
+
+    sei();
+    debug_puts("Test motion detection\n\r");
+    while(1) {
+        timer_wait_finish();
+        debug_puts("Go to sleep!\n\r");
+        uart_async_wait_tx(DEBUG_UART);
+        cli();
+        motion_detection_enable_watchdog();
+        sleep_enable();
+        sei();
+        sleep_cpu();
+        sleep_disable();
+        debug_puts("Wake up!\n\r");
+        motion_detection_wait();
+        switch (motion_detection_state) {
+            case MOTION_DETECTION_STATE_SLEEP:
+                debug_puts("Cause of wake up was not motion detection\n\r");
+                break;
+            case MOTION_DETECTION_STATE_MOTION:
+                debug_puts("Motion detected\n\r");
+                buzzer_beep(3, 1000, 500);
+                break;
+            case MOTION_DETECTION_STATE_NO_MOTION:
+                debug_puts("No motion detected\n\r");
                 break;
             default:
                 break;

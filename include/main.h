@@ -8,7 +8,7 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-//#define TEST_MOTION_SENSOR
+#define TEST_MOTION_SENSOR
 //#define TEST_UART
 //#define TEST_UART_TO_UART
 //#define TEST_BUZZER
@@ -20,5 +20,5 @@
 //#define TEST_PHONE
 //#define TEST_TIMER
 //#define TEST_GSM
-#define TEST_MODE_SWITCH
+//#define TEST_MODE_SWITCH
 #endif /* MAIN_H_ */
