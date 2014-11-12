@@ -20,13 +20,14 @@
 #define TIMER_COMPARE               58 - 1                // prescale and compare value result to 0.0010069444444444444 seconds
                                                           // between ticks at 3686400 Hz CPU Clock
 
-#define TIMER_COUNT                 5
+#define TIMER_COUNT                 6
 
 #define TIMER_UART_INDEX            0
 #define TIMER_MDEVICE_INDEX         1
 #define TIMER_MOBILE_INDEX          2
 #define TIMER_BUZZER_INDEX          3
 #define TIMER_MODE_SWITCH_INDEX     4
+#define TIMER_MOT_DETECTION_INDEX   5
 
 #define TRIGGER_COUNT               1
 
@@ -93,5 +94,15 @@
 #define MODE_SWITCH_LONG_BEEP_MS    1500
 #define MODE_SWITCH_SHORT_BEEP_MS   500
 #define MODE_SWITCH_BEEP_PAUSE_MS   300
+
+/* motion detection */
+#define MOTION_DETECTION_PIN        PCINT31_PIN
+#define MOTION_DETECTION_DDR        PCINT31_DDR
+#define MOTION_DETECTION_PORT       PCINT31_PORT
+#define MOTION_DETECTION_BIT        (1<<PCINT31_BIT)
+#define MOTION_DETECTION_PCIE       (1<<PCIE3)
+#define MOTION_DETECTION_PCIF       (1<<PCIF3)
+#define MOTION_DETECTION_PCMSK      PCMSK3
+#define MOTION_DETECTION_VECT       PCINT3_vect
 
 #endif /* HARDWARE_H_ */
